@@ -1,0 +1,126 @@
+<?php
+
+namespace App\Entity;
+
+use App\Repository\BookingRepository;
+use Doctrine\DBAL\Types\Types;
+use Doctrine\ORM\Mapping as ORM;
+
+#[ORM\Entity(repositoryClass: BookingRepository::class)]
+class Booking
+{
+    #[ORM\Id]
+    #[ORM\GeneratedValue]
+    #[ORM\Column]
+    private ?int $id = null;
+
+    #[ORM\Column(type: Types::DATE_MUTABLE)]
+    private ?\DateTimeInterface $date = null;
+
+    #[ORM\Column(type: Types::TIME_MUTABLE)]
+    private ?\DateTimeInterface $time_start = null;
+
+    #[ORM\Column(type: Types::TIME_MUTABLE)]
+    private ?\DateTimeInterface $time_end = null;
+
+    #[ORM\Column(length: 10, nullable: true)]
+    private ?string $recurring = null;
+
+    #[ORM\Column(length: 255)]
+    private ?string $room = null;
+
+    #[ORM\Column(length: 255)]
+    private ?string $booked_by = null;
+
+    #[ORM\Column(type: Types::DATE_MUTABLE, nullable: true)]
+    private ?\DateTimeInterface $recurring_exception = null;
+
+    public function getId(): ?int
+    {
+        return $this->id;
+    }
+
+    public function getDate(): ?\DateTimeInterface
+    {
+        return $this->date;
+    }
+
+    public function setDate(\DateTimeInterface $date): static
+    {
+        $this->date = $date;
+
+        return $this;
+    }
+
+    public function getTimeStart(): ?\DateTimeInterface
+    {
+        return $this->time_start;
+    }
+
+    public function setTimeStart(\DateTimeInterface $time_start): static
+    {
+        $this->time_start = $time_start;
+
+        return $this;
+    }
+
+    public function getTimeEnd(): ?\DateTimeInterface
+    {
+        return $this->time_end;
+    }
+
+    public function setTimeEnd(\DateTimeInterface $time_end): static
+    {
+        $this->time_end = $time_end;
+
+        return $this;
+    }
+
+    public function getRecurring(): ?string
+    {
+        return $this->recurring;
+    }
+
+    public function setRecurring(?string $recurring): static
+    {
+        $this->recurring = $recurring;
+
+        return $this;
+    }
+
+    public function getRoom(): ?string
+    {
+        return $this->room;
+    }
+
+    public function setRoom(string $room): static
+    {
+        $this->room = $room;
+
+        return $this;
+    }
+
+    public function getBookedBy(): ?string
+    {
+        return $this->booked_by;
+    }
+
+    public function setBookedBy(string $booked_by): static
+    {
+        $this->booked_by = $booked_by;
+
+        return $this;
+    }
+
+    public function getRecurringException(): ?\DateTimeInterface
+    {
+        return $this->recurring_exception;
+    }
+
+    public function setRecurringException(?\DateTimeInterface $recurring_exception): static
+    {
+        $this->recurring_exception = $recurring_exception;
+
+        return $this;
+    }
+}
