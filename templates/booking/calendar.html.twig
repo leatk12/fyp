@@ -4,4 +4,57 @@
 
 {% block body %}
     <div id="calendar" style="max-width: 900px; margin: 50px auto;"></div>
+
+    <div id="modalOverlay"></div>
+
+    <div id="bookingModal">
+        <form id="bookingForm">
+            <label>Date:</label>
+            <input type="date" id="bookingDate" name="date" required><br>
+
+            <label>Start Time:</label>
+            <input type="time" id="bookingStart" name="time_start" required><br>
+
+            <label>End Time:</label>
+            <input type="time" id="bookingEnd" name="time_end" required><br>
+
+            <label>Recurring:</label>
+            <select id="bookingRecurring" name="recurring">
+                <option value="none">None</option>
+                <option value="daily">Daily</option>
+                <option value="weekly">Weekly</option>
+            </select><br>
+
+            <label>Recurring Exception:</label>
+            <input type="date" id="bookingRecurringException" name="recurring_exception"><br>
+
+            <label>Room:</label>
+            <input type="text" id="bookingRoom" name="room" required><br>
+
+            <label>Booked By:</label>
+            <select id="bookingBookedBy" name="booked_by" required></select><br>
+
+            <button type="submit">Submit</button>
+            <button type="button" id="cancelBooking">Cancel</button>
+
+            <div id="addCustomerSection" style="margin-top: 20px; display: none;">
+                <h3>Add New Customer</h3>
+                <p>Fill in the fields below if you're adding a new customer:</p>
+                <label>Organisation:</label>
+                <input type="text" id="customerOrganisation" name="organisation"><br>
+
+                <label>Representative:</label>
+                <input type="text" id="customerRepresentative" name="representative" ><br>
+
+                <label>Phone:</label>
+                <input type="text" id="customerPhone" name="phone" ><br>
+
+                <label>Email:</label>
+                <input type="email" id="customerEmail" name="email" ><br>
+
+                <button type="button" id="addCustomerButton">Add Customer</button>
+            </div>
+
+        </form>
+    </div>
 {% endblock %}

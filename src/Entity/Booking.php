@@ -35,6 +35,9 @@ class Booking
     #[ORM\Column(type: Types::DATE_MUTABLE, nullable: true)]
     private ?\DateTimeInterface $recurring_exception = null;
 
+    #[ORM\Column]
+    private ?int $cust_id = null;
+
     public function getId(): ?int
     {
         return $this->id;
@@ -120,6 +123,18 @@ class Booking
     public function setRecurringException(?\DateTimeInterface $recurring_exception): static
     {
         $this->recurring_exception = $recurring_exception;
+
+        return $this;
+    }
+
+    public function getCustId(): ?int
+    {
+        return $this->cust_id;
+    }
+
+    public function setCustId(int $cust_id): static
+    {
+        $this->cust_id = $cust_id;
 
         return $this;
     }
