@@ -2,28 +2,39 @@ body {
     background-color: lightgray;
 }
 
-#bookingModal,
-#editBookingModal {
-    display: none;
-    position: absolute;
-    z-index: 1000;
-    top: 10%; /* Set modal to appear near the top of the page */
+.time-slot {
+    height: 50px;
+    cursor: pointer;
+    text-align: center;
+    line-height: 50px;
+    border: 1px solid #ccc;
+}
+
+.time-slot.booked {
+    background-color: blue;
+    color: white;
+    text-align: center;
+    vertical-align: middle;
+}
+
+#bookingModal {
+    position: fixed;
+    top: 30%;
     left: 50%;
-    transform: translateX(-50%);
-    background-color: white;
+    transform: translate(-50%, -50%);
+    background: white;
     padding: 20px;
-    box-shadow: 0 4px 8px rgba(0, 0, 0, 0.2);
-    border-radius: 8px;
-    width: 400px;
+    border: 1px solid lightgray;
+    box-shadow: 0 4px 8px rgba(0, 0, 0, 0.1);
+    z-index: 1000;
 }
 
 #modalOverlay {
-    display: none;
     position: fixed;
     top: 0;
     left: 0;
     width: 100%;
     height: 100%;
-    background-color: rgba(0, 0, 0, 0.5);
+    background: rgba(0, 0, 0, 0.5);
     z-index: 999;
 }

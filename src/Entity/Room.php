@@ -1,5 +1,4 @@
 <?php
-
 namespace App\Entity;
 
 use App\Repository\RoomRepository;
@@ -14,19 +13,19 @@ class Room
     private ?int $id = null;
 
     #[ORM\Column(length: 255)]
-    private ?string $room_name = null;
+    private ?string $roomName = null; // Changed from "room_name" to "roomName"
 
     #[ORM\Column]
-    private ?int $cost_individual = null;
+    private ?int $costIndividual = null;
 
     #[ORM\Column]
-    private ?int $cost_private = null;
+    private ?int $costPrivate = null;
 
     #[ORM\Column]
-    private ?int $cost_community = null;
+    private ?int $costCommunity = null;
 
     #[ORM\Column]
-    private ?int $max_occupancy = null;
+    private ?int $maxOccupancy = null;
 
     #[ORM\Column(length: 255)]
     private ?string $organisation = null;
@@ -38,60 +37,60 @@ class Room
 
     public function getRoomName(): ?string
     {
-        return $this->room_name;
+        return $this->roomName;
     }
 
-    public function setRoomName(string $room_name): static
+    public function setRoomName(string $roomName): static
     {
-        $this->room_name = $room_name;
+        $this->roomName = $roomName;
 
         return $this;
     }
 
     public function getCostIndividual(): ?int
     {
-        return $this->cost_individual;
+        return $this->costIndividual;
     }
 
-    public function setCostIndividual(int $cost_individual): static
+    public function setCostIndividual(int $costIndividual): static
     {
-        $this->cost_individual = $cost_individual;
+        $this->costIndividual = $costIndividual;
 
         return $this;
     }
 
     public function getCostPrivate(): ?int
     {
-        return $this->cost_private;
+        return $this->costPrivate;
     }
 
-    public function setCostPrivate(int $cost_private): static
+    public function setCostPrivate(int $costPrivate): static
     {
-        $this->cost_private = $cost_private;
+        $this->costPrivate = $costPrivate;
 
         return $this;
     }
 
     public function getCostCommunity(): ?int
     {
-        return $this->cost_community;
+        return $this->costCommunity;
     }
 
-    public function setCostCommunity(int $cost_community): static
+    public function setCostCommunity(int $costCommunity): static
     {
-        $this->cost_community = $cost_community;
+        $this->costCommunity = $costCommunity;
 
         return $this;
     }
 
     public function getMaxOccupancy(): ?int
     {
-        return $this->max_occupancy;
+        return $this->maxOccupancy;
     }
 
-    public function setMaxOccupancy(int $max_occupancy): static
+    public function setMaxOccupancy(int $maxOccupancy): static
     {
-        $this->max_occupancy = $max_occupancy;
+        $this->maxOccupancy = $maxOccupancy;
 
         return $this;
     }

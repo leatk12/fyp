@@ -1,0 +1,80 @@
+{% extends 'base.html.twig' %}
+
+{% block title %}Booking Page{% endblock %}
+
+{% block body %}
+    <h2>Booking for {{ date }}</h2>
+    <div id="booking-grid" style="display: grid; grid-template-columns: auto repeat({{ rooms|length }}, 1fr); gap: 1px; background: lightgray; max-width: 100%; margin: 50px auto;">
+        <!-- Column Headers -->
+        <div></div> <!-- Empty cell for time column -->
+        {% for room in rooms %}
+            <div style="background: #ddd; text-align: center; padding: 10px; font-weight: bold;">{{ room.roomName }}</div>
+        {% endfor %}
+
+        <!-- Time and Room Slots -->
+        {% for hour in 8..20 %}
+            <div style="background: #eee; text-align: center; padding: 10px; font-weight: bold;">{{ hour }}:00</div>
+            {% for room in rooms %}
+                <div class="time-slot"
+                     data-room-id="{{ room.roomName }}"
+                     data-room-name="{{ room.roomName }}"
+                     data-time="{{ hour }}"
+                     style="background: white; height: 50px; cursor: pointer; border: 1px solid #ccc;"></div>
+            {% endfor %}
+        {% endfor %}
+    </div>
+
+    <div id="modalOverlay" style="display: none;"></div>
+
+    <div id="bookingModal" style="display: none;">
+        <form id="bookingForm">
+            <h3>Create Booking</h3>
+
+            <!-- Room and Time -->
+            <label for="bookingRoom">Room:</label>
+            <input type="text" id="bookingRoom" readonly><br>
+
+            <label for="bookingStart">Start Time:</label>
+            <input type="time" id="bookingStart" readonly><br>
+
+            <label for="bookingEnd">End Time:</label>
+            <input type="time" id="bookingEnd" readonly><br>
+
+            <label for="bookingDate">Date:</label>
+            <input type="date" id="bookingDate" value="{{ date }}" readonly><br>
+
+            <!-- Customer Information -->
+            <label for="existingCustomer">Select Customer:</label>
+            <select id="existingCustomer">
+                <option value="" disabled selected>Select an existing customer</option>
+            </select>
+            <button type="button" id="addNewCustomer">Add New Customer</button><br>
+
+            <div id="newCustomerFields" style="display: none;">
+                <label for="organisation">Organisation:</label>
+                <input type="text" id="organisation"><br>
+
+                <label for="representative">Representative:</label>
+                <input type="text" id="representative"><br>
+
+                <label for="phone">Phone:</label>
+                <input type="tel" id="phone"><br>
+
+                <label for="email">Email:</label>
+                <input type="email" id="email"><br>
+            </div>
+
+            <label for="recurring">Recurring:</label>
+            <select id="recurring">
+                <option value="" disabled selected>Select Recurrence</option>
+            </select><br>
+
+
+            <label for="recurringException">Recurring Exception:</label>
+            <input type="date" id="recurringException"><br>
+
+            <button type="submit">Save Booking</button>
+            <button type="button" id="cancelBooking">Cancel</button>
+        </form>
+    </div>
+{% endblock %}

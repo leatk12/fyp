@@ -23,20 +23,18 @@ class Booking
     #[ORM\Column(type: Types::TIME_MUTABLE)]
     private ?\DateTimeInterface $time_end = null;
 
-    #[ORM\Column(length: 10, nullable: true)]
-    private ?string $recurring = null;
-
     #[ORM\Column(length: 255)]
-    private ?string $room = null;
+    private ?string $room = null; // Changed to store room name
 
     #[ORM\Column(length: 255)]
     private ?string $booked_by = null;
 
-    #[ORM\Column(type: Types::DATE_MUTABLE, nullable: true)]
-    private ?\DateTimeInterface $recurring_exception = null;
-
     #[ORM\Column]
     private ?int $cust_id = null;
+
+    #[ORM\ManyToOne(targetEntity: Recurrence::class)]
+    #[ORM\JoinColumn(nullable: true)] // Allow this field to be null
+    private ?Recurrence $recurring = null;
 
     public function getId(): ?int
     {
@@ -79,18 +77,6 @@ class Booking
         return $this;
     }
 
-    public function getRecurring(): ?string
-    {
-        return $this->recurring;
-    }
-
-    public function setRecurring(?string $recurring): static
-    {
-        $this->recurring = $recurring;
-
-        return $this;
-    }
-
     public function getRoom(): ?string
     {
         return $this->room;
@@ -115,18 +101,6 @@ class Booking
         return $this;
     }
 
-    public function getRecurringException(): ?\DateTimeInterface
-    {
-        return $this->recurring_exception;
-    }
-
-    public function setRecurringException(?\DateTimeInterface $recurring_exception): static
-    {
-        $this->recurring_exception = $recurring_exception;
-
-        return $this;
-    }
-
     public function getCustId(): ?int
     {
         return $this->cust_id;
@@ -135,6 +109,18 @@ class Booking
     public function setCustId(int $cust_id): static
     {
         $this->cust_id = $cust_id;
+
+        return $this;
+    }
+
+    public function getRecurring(): ?Recurrence
+    {
+        return $this->recurring;
+    }
+
+    public function setRecurring(?Recurrence $recurring): static
+    {
+        $this->recurring = $recurring;
 
         return $this;
     }
