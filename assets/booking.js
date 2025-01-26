@@ -8,6 +8,7 @@ document.addEventListener('DOMContentLoaded', () => {
     const addNewCustomerButton = document.getElementById('addNewCustomer');
     const newCustomerFields = document.getElementById('newCustomerFields');
     const existingCustomerDropdown = document.getElementById('existingCustomer');
+    const recurringSelect = document.getElementById('recurring'); // The new select
 
     let isAddingNewCustomer = false; // Track if a new customer is being added
 
@@ -21,25 +22,21 @@ document.addEventListener('DOMContentLoaded', () => {
         return true;
     };
 
-    // Parse the "date" query parameter from the URL (e.g. ?date=YYYY-MM-DD)
+    // Grab the page date from URL (e.g., ?date=2025-01-26)
     const urlParams = new URLSearchParams(window.location.search);
     const pageDate = urlParams.get('date');
-    // Example: pageDate might be "2025-01-26"
 
-    // Load bookings and only display those matching pageDate
+    // Filter logic: Only display bookings for 'pageDate'
     const loadBookings = async () => {
         try {
             const response = await fetch('/api/bookings');
             if (!response.ok) throw new Error(`HTTP error! Status: ${response.status}`);
 
             const allBookings = await response.json();
-
-            // Filter to only bookings that match this page's date (if pageDate is present)
             const bookings = pageDate
                 ? allBookings.filter(b => b.date === pageDate)
-                : allBookings; // If for some reason pageDate is null, show all
+                : allBookings;
 
-            // Now only loop over bookings for this date
             bookings.forEach(booking => {
                 const startTime = parseInt(booking.time_start.split(':')[0]);
                 const endTime = parseInt(booking.time_end.split(':')[0]);
@@ -47,7 +44,6 @@ document.addEventListener('DOMContentLoaded', () => {
 
                 console.log(`Processing booking: ${JSON.stringify(booking)}`);
 
-                // Collect all time slots between startTime and endTime
                 const slots = [];
                 for (let time = startTime; time < endTime; time++) {
                     const slot = document.querySelector(
@@ -56,12 +52,10 @@ document.addEventListener('DOMContentLoaded', () => {
                     if (slot) slots.push(slot);
                 }
 
-                // Merge the cells and style them
                 if (slots.length > 0) {
                     const firstSlot = slots[0];
                     const totalRows = slots.length;
 
-                    // Merge cells by setting `gridRow` span
                     firstSlot.style.gridRow = `span ${totalRows}`;
                     firstSlot.classList.add('booked');
                     firstSlot.textContent = booking.booked_by;
@@ -69,7 +63,6 @@ document.addEventListener('DOMContentLoaded', () => {
                     firstSlot.style.color = 'white';
                     firstSlot.style.textAlign = 'center';
 
-                    // Hide the remaining slots for the booking duration
                     slots.slice(1).forEach(slot => (slot.style.display = 'none'));
                 } else {
                     console.warn(`No slots found for booking: ${JSON.stringify(booking)}`);
@@ -80,7 +73,6 @@ document.addEventListener('DOMContentLoaded', () => {
         }
     };
 
-    // Load customers into the dropdown
     const loadCustomers = async () => {
         try {
             const response = await fetch('/api/customers');
@@ -128,7 +120,7 @@ document.addEventListener('DOMContentLoaded', () => {
         resetModalFields();
     };
 
-    // Open modal for booking
+    // Open modal
     const openModal = (roomId, startTime, endTime) => {
         const roomNameElement = document.querySelector(`.time-slot[data-room-id="${roomId}"]`);
         if (!roomNameElement) {
@@ -141,7 +133,6 @@ document.addEventListener('DOMContentLoaded', () => {
         document.getElementById('bookingRoom').value = roomName;
         document.getElementById('bookingStart').value = startTime.toString().padStart(2, '0') + ':00';
         document.getElementById('bookingEnd').value = endTime.toString().padStart(2, '0') + ':00';
-        // Default to the pageDate if available, otherwise today's date
         document.getElementById('bookingDate').value = pageDate || new Date().toISOString().split('T')[0];
 
         bookingModal.style.display = 'block';
@@ -152,7 +143,6 @@ document.addEventListener('DOMContentLoaded', () => {
     let dragStartTime = null;
     let dragEndTime = null;
 
-    // If bookingContainer is found, add drag booking logic
     if (checkElement(bookingContainer, "Booking container")) {
         bookingContainer.addEventListener('mousedown', (event) => {
             if (event.target.classList.contains('time-slot')) {
@@ -192,12 +182,17 @@ document.addEventListener('DOMContentLoaded', () => {
             booked_by: isAddingNewCustomer
                 ? document.getElementById('representative').value
                 : existingCustomerDropdown.value,
+            // Now we re-add the recurrence from the select
+            recurring: recurringSelect?.value?.toLowerCase() || 'none',
         };
 
         console.log('Payload being sent:', bookingDetails);
 
         try {
-            const response = await fetch('/api/bookings_no_recurrence', {
+            // We reintroduce an endpoint that handles recurrence logic (example: /api/bookings)
+            // OR if you are still using /api/bookings_no_recurrence, you can rename it
+            // but let's assume we have a new route with recurrence logic
+            const response = await fetch('/api/bookings', {
                 method: 'POST',
                 body: JSON.stringify(bookingDetails),
                 headers: { 'Content-Type': 'application/json' },

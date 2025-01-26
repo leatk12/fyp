@@ -64,7 +64,15 @@
                 <input type="email" id="email"><br>
             </div>
 
-            <!-- Recurrence fields removed -->
+            <!-- Recurrence Field -->
+            <label for="recurring">Recurring:</label>
+            <select id="recurring">
+                <option value="none" selected>None</option>
+                <option value="daily">Daily</option>
+                <option value="weekly">Weekly</option>
+                <option value="monthly">Monthly</option>
+                <option value="yearly">Yearly</option>
+            </select><br>
 
             <button type="submit">Save Booking</button>
             <button type="button" id="cancelBooking">Cancel</button>
