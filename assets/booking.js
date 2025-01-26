@@ -8,7 +8,9 @@ document.addEventListener('DOMContentLoaded', () => {
     const addNewCustomerButton = document.getElementById('addNewCustomer');
     const newCustomerFields = document.getElementById('newCustomerFields');
     const existingCustomerDropdown = document.getElementById('existingCustomer');
-    const recurringSelect = document.getElementById('recurring'); // The new select
+
+    // The "Add" button inside new customer fields
+    const addCustomerAjaxButton = document.getElementById('addCustomerAjax');
 
     let isAddingNewCustomer = false; // Track if a new customer is being added
 
@@ -33,6 +35,7 @@ document.addEventListener('DOMContentLoaded', () => {
             if (!response.ok) throw new Error(`HTTP error! Status: ${response.status}`);
 
             const allBookings = await response.json();
+            // If 'pageDate' is set in the URL, we only load that day's bookings
             const bookings = pageDate
                 ? allBookings.filter(b => b.date === pageDate)
                 : allBookings;
@@ -73,6 +76,7 @@ document.addEventListener('DOMContentLoaded', () => {
         }
     };
 
+    // Load customers into the dropdown
     const loadCustomers = async () => {
         try {
             const response = await fetch('/api/customers');
@@ -101,6 +105,65 @@ document.addEventListener('DOMContentLoaded', () => {
             newCustomerFields.style.display = isAddingNewCustomer ? 'block' : 'none';
             if (!isAddingNewCustomer) {
                 existingCustomerDropdown.value = '';
+            }
+        });
+    }
+
+    // ***** NEW: Add an event listener for the "Add" button that does an AJAX call *****
+    if (checkElement(addCustomerAjaxButton, "Add Customer Ajax button")) {
+        addCustomerAjaxButton.addEventListener('click', async () => {
+            // Gather the new customer fields
+            const organisation = document.getElementById('organisation').value.trim();
+            const representative = document.getElementById('representative').value.trim();
+            const phone = document.getElementById('phone').value.trim();
+            const email = document.getElementById('email').value.trim();
+
+            if (!representative || !phone || !email || !organisation) {
+                alert('Please fill in all fields before adding a new customer.');
+                return;
+            }
+
+            const newCustomerDetails = {
+                organisation,
+                representative,
+                phone,
+                email
+            };
+
+            try {
+                const response = await fetch('/api/customers', {
+                    method: 'POST',
+                    body: JSON.stringify(newCustomerDetails),
+                    headers: { 'Content-Type': 'application/json' },
+                });
+
+                if (!response.ok) {
+                    const errorText = await response.text();
+                    console.error('Error adding customer:', errorText);
+                    throw new Error('Failed to add new customer. See console for details.');
+                }
+
+                // If successful, parse the result & update the dropdown
+                const result = await response.json();
+                console.log('New customer added:', result);
+
+                // Add new option to the existing customer dropdown
+                const option = document.createElement('option');
+                option.value = representative; // or the ID if you prefer
+                option.textContent = `${representative} (${organisation})`;
+                existingCustomerDropdown.appendChild(option);
+
+                // Select the newly added customer in the dropdown
+                existingCustomerDropdown.value = representative;
+
+                // Hide the new customer fields
+                newCustomerFields.style.display = 'none';
+                isAddingNewCustomer = false;
+
+                alert('New customer added successfully!');
+            } catch (error) {
+                console.error('Error in addCustomerAjaxButton:', error);
+                alert(error.message);
             }
         });
     }
@@ -182,16 +245,13 @@ document.addEventListener('DOMContentLoaded', () => {
             booked_by: isAddingNewCustomer
                 ? document.getElementById('representative').value
                 : existingCustomerDropdown.value,
-            // Now we re-add the recurrence from the select
-            recurring: recurringSelect?.value?.toLowerCase() || 'none',
+            // We keep 'recurring' if you want to handle recurrence
+            recurring: document.getElementById('recurring')?.value?.toLowerCase() || 'none',
         };
 
         console.log('Payload being sent:', bookingDetails);
 
         try {
-            // We reintroduce an endpoint that handles recurrence logic (example: /api/bookings)
-            // OR if you are still using /api/bookings_no_recurrence, you can rename it
-            // but let's assume we have a new route with recurrence logic
             const response = await fetch('/api/bookings', {
                 method: 'POST',
                 body: JSON.stringify(bookingDetails),

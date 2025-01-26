@@ -8,18 +8,23 @@
         <!-- Column Headers -->
         <div></div> <!-- Empty cell for time column -->
         {% for room in rooms %}
-            <div style="background: #ddd; text-align: center; padding: 10px; font-weight: bold;">{{ room.roomName }}</div>
+            <div style="background: #ddd; text-align: center; padding: 10px; font-weight: bold;">
+                {{ room.roomName }}
+            </div>
         {% endfor %}
 
         <!-- Time and Room Slots -->
         {% for hour in 8..20 %}
-            <div style="background: #eee; text-align: center; padding: 10px; font-weight: bold;">{{ hour }}:00</div>
+            <div style="background: #eee; text-align: center; padding: 10px; font-weight: bold;">
+                {{ hour }}:00
+            </div>
             {% for room in rooms %}
                 <div class="time-slot"
                      data-room-id="{{ room.roomName }}"
                      data-room-name="{{ room.roomName }}"
                      data-time="{{ hour }}"
-                     style="background: white; height: 50px; cursor: pointer; border: 1px solid #ccc;"></div>
+                     style="background: white; height: 50px; cursor: pointer; border: 1px solid #ccc;">
+                </div>
             {% endfor %}
         {% endfor %}
     </div>
@@ -50,6 +55,7 @@
             </select>
             <button type="button" id="addNewCustomer">Add New Customer</button><br>
 
+            <!-- New Customer Fields (hidden by default) -->
             <div id="newCustomerFields" style="display: none;">
                 <label for="organisation">Organisation:</label>
                 <input type="text" id="organisation"><br>
@@ -62,6 +68,9 @@
 
                 <label for="email">Email:</label>
                 <input type="email" id="email"><br>
+
+                <!-- NEW "Add" button for AJAX customer creation -->
+                <button type="button" id="addCustomerAjax">Add</button>
             </div>
 
             <!-- Recurrence Field -->
