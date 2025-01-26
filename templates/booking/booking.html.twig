@@ -3,133 +3,185 @@
 {% block title %}Booking Page{% endblock %}
 
 {% block body %}
-    <h2>Booking for {{ date }}</h2>
-    <div id="booking-grid"
-         style="display: grid; grid-template-columns: auto repeat({{ rooms|length }}, 1fr);
-                 gap: 1px; background: lightgray; max-width: 100%; margin: 50px auto;">
-        <!-- Column Headers -->
-        <div></div> <!-- Empty cell for time column -->
-        {% for room in rooms %}
-            <div style="background: #ddd; text-align: center; padding: 10px; font-weight: bold;">
-                {{ room.roomName }}
-            </div>
-        {% endfor %}
+    <div class="container mt-4">
 
-        <!-- Time and Room Slots -->
-        {% for hour in 8..20 %}
-            <div style="background: #eee; text-align: center; padding: 10px; font-weight: bold;">
-                {{ hour }}:00
-            </div>
+        <h2>Booking for {{ date }}</h2>
+
+        <!-- BACK TO CALENDAR BUTTON/LINK -->
+        <div class="my-3">
+            <a href="{{ path('app_calendar') }}" class="btn btn-outline-secondary">
+                &larr; Back to Calendar
+            </a>
+        </div>
+
+        <div id="booking-grid"
+             style="display: grid; grid-template-columns: auto repeat({{ rooms|length }}, 1fr);
+                     gap: 1px; background: lightgray; max-width: 100%; margin: 0 auto;">
+            <!-- Column Headers -->
+            <div></div> <!-- Empty cell for time column -->
             {% for room in rooms %}
-                <div class="time-slot"
-                     data-room-id="{{ room.roomName }}"
-                     data-room-name="{{ room.roomName }}"
-                     data-time="{{ hour }}"
-                     style="background: white; height: 50px; cursor: pointer; border: 1px solid #ccc;">
-                    <!-- This slot might get dynamically assigned .booked in JS -->
+                <div class="text-center p-2 fw-bold" style="background: #ddd;">
+                    {{ room.roomName }}
                 </div>
             {% endfor %}
-        {% endfor %}
+
+            <!-- Time and Room Slots -->
+            {% for hour in 8..20 %}
+                <div class="text-center p-2 fw-bold" style="background: #eee;">
+                    {{ hour }}:00
+                </div>
+                {% for room in rooms %}
+                    <div class="time-slot"
+                         data-room-id="{{ room.roomName }}"
+                         data-room-name="{{ room.roomName }}"
+                         data-time="{{ hour }}"
+                         style="background: white; height: 50px;">
+                        <!-- .time-slot.booked is added dynamically in JS -->
+                    </div>
+                {% endfor %}
+            {% endfor %}
+        </div>
     </div>
 
-    <!-- 1) Existing overlay + creation modal -->
-    <div id="modalOverlay"></div>
+    <!-- Bootstrap MODAL for "Create Booking" -->
+    <div class="modal fade" id="bookingModal" tabindex="-1" aria-labelledby="bookingModalLabel" aria-hidden="true">
+        <div class="modal-dialog">
+            <form id="bookingForm" class="modal-content">
+                <div class="modal-header">
+                    <h5 class="modal-title" id="bookingModalLabel">Create Booking</h5>
+                    <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
+                </div>
+                <div class="modal-body">
+                    <!-- Room and Time -->
+                    <div class="mb-3">
+                        <label for="bookingRoom" class="form-label">Room:</label>
+                        <input type="text" id="bookingRoom" class="form-control" readonly>
+                    </div>
 
-    <div id="bookingModal">
-        <form id="bookingForm">
-            <h3>Create Booking</h3>
+                    <div class="mb-3">
+                        <label for="bookingStart" class="form-label">Start Time:</label>
+                        <input type="time" id="bookingStart" class="form-control" readonly>
+                    </div>
 
-            <!-- Room and Time -->
-            <label for="bookingRoom">Room:</label>
-            <input type="text" id="bookingRoom" readonly><br>
+                    <div class="mb-3">
+                        <label for="bookingEnd" class="form-label">End Time:</label>
+                        <input type="time" id="bookingEnd" class="form-control" readonly>
+                    </div>
 
-            <label for="bookingStart">Start Time:</label>
-            <input type="time" id="bookingStart" readonly><br>
+                    <div class="mb-3">
+                        <label for="bookingDate" class="form-label">Date:</label>
+                        <input type="date" id="bookingDate" class="form-control" value="{{ date }}" readonly>
+                    </div>
 
-            <label for="bookingEnd">End Time:</label>
-            <input type="time" id="bookingEnd" readonly><br>
+                    <!-- Customer Information -->
+                    <div class="mb-3">
+                        <label for="existingCustomer" class="form-label">Select Customer:</label>
+                        <select id="existingCustomer" class="form-select">
+                            <option value="" disabled selected>Select an existing customer</option>
+                        </select>
+                        <button type="button" class="btn btn-link p-0" id="addNewCustomer">Add New Customer</button>
+                    </div>
 
-            <label for="bookingDate">Date:</label>
-            <input type="date" id="bookingDate" value="{{ date }}" readonly><br>
+                    <!-- New Customer Fields (hidden by default) -->
+                    <div id="newCustomerFields" style="display: none;">
+                        <div class="mb-2">
+                            <label for="organisation" class="form-label">Organisation:</label>
+                            <input type="text" id="organisation" class="form-control">
+                        </div>
+                        <div class="mb-2">
+                            <label for="representative" class="form-label">Representative:</label>
+                            <input type="text" id="representative" class="form-control">
+                        </div>
+                        <div class="mb-2">
+                            <label for="phone" class="form-label">Phone:</label>
+                            <input type="tel" id="phone" class="form-control">
+                        </div>
+                        <div class="mb-2">
+                            <label for="email" class="form-label">Email:</label>
+                            <input type="email" id="email" class="form-control">
+                        </div>
+                        <!-- "Add" button for AJAX customer creation -->
+                        <button type="button" class="btn btn-sm btn-primary" id="addCustomerAjax">Add</button>
+                    </div>
 
-            <!-- Customer Information -->
-            <label for="existingCustomer">Select Customer:</label>
-            <select id="existingCustomer">
-                <option value="" disabled selected>Select an existing customer</option>
-            </select>
-            <button type="button" id="addNewCustomer">Add New Customer</button><br>
-
-            <!-- New Customer Fields (hidden by default) -->
-            <div id="newCustomerFields" style="display: none;">
-                <label for="organisation">Organisation:</label>
-                <input type="text" id="organisation"><br>
-
-                <label for="representative">Representative:</label>
-                <input type="text" id="representative"><br>
-
-                <label for="phone">Phone:</label>
-                <input type="tel" id="phone"><br>
-
-                <label for="email">Email:</label>
-                <input type="email" id="email"><br>
-
-                <!-- "Add" button for AJAX customer creation -->
-                <button type="button" id="addCustomerAjax">Add</button>
-            </div>
-
-            <!-- Recurrence Field -->
-            <label for="recurring">Recurring:</label>
-            <select id="recurring">
-                <option value="none" selected>None</option>
-                <option value="daily">Daily</option>
-                <option value="weekly">Weekly</option>
-                <option value="monthly">Monthly</option>
-                <option value="yearly">Yearly</option>
-            </select><br>
-
-            <button type="submit">Save Booking</button>
-            <button type="button" id="cancelBooking">Cancel</button>
-        </form>
+                    <div class="mb-3">
+                        <label for="recurring" class="form-label">Recurring:</label>
+                        <select id="recurring" class="form-select">
+                            <option value="none" selected>None</option>
+                            <option value="daily">Daily</option>
+                            <option value="weekly">Weekly</option>
+                            <option value="monthly">Monthly</option>
+                            <option value="yearly">Yearly</option>
+                        </select>
+                    </div>
+                </div>
+                <div class="modal-footer">
+                    <button type="submit" class="btn btn-primary">Save Booking</button>
+                    <button type="button" class="btn btn-secondary" data-bs-dismiss="modal" id="cancelBooking">Cancel</button>
+                </div>
+            </form>
+        </div>
     </div>
 
-    <!-- 2) New overlay + edit modal -->
-    <div id="editBookingOverlay"></div>
+    <!-- Bootstrap MODAL for "Edit Booking" -->
+    <div class="modal fade" id="editBookingModal" tabindex="-1" aria-labelledby="editBookingModalLabel" aria-hidden="true">
+        <div class="modal-dialog">
+            <form id="editBookingForm" class="modal-content">
+                <div class="modal-header">
+                    <h5 class="modal-title" id="editBookingModalLabel">Edit Booking</h5>
+                    <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
+                </div>
+                <div class="modal-body">
+                    <!-- Hidden ID to know which booking we are editing -->
+                    <input type="hidden" id="editBookingId">
 
-    <div id="editBookingModal">
-        <form id="editBookingForm">
-            <h3>Edit Booking</h3>
+                    <div class="mb-3">
+                        <label for="editBookingRoom" class="form-label">Room:</label>
+                        <input type="text" id="editBookingRoom" class="form-control" readonly>
+                    </div>
 
-            <!-- Hidden ID to know which booking we are editing -->
-            <input type="hidden" id="editBookingId">
+                    <div class="mb-3">
+                        <label for="editBookingStart" class="form-label">Start Time:</label>
+                        <input type="time" id="editBookingStart" class="form-control">
+                    </div>
 
-            <label for="editBookingRoom">Room:</label>
-            <input type="text" id="editBookingRoom" readonly><br>
+                    <div class="mb-3">
+                        <label for="editBookingEnd" class="form-label">End Time:</label>
+                        <input type="time" id="editBookingEnd" class="form-control">
+                    </div>
 
-            <label for="editBookingStart">Start Time:</label>
-            <input type="time" id="editBookingStart"><br>
+                    <div class="mb-3">
+                        <label for="editBookingDate" class="form-label">Date:</label>
+                        <input type="date" id="editBookingDate" class="form-control">
+                    </div>
 
-            <label for="editBookingEnd">End Time:</label>
-            <input type="time" id="editBookingEnd"><br>
+                    <!-- For booking customer info -->
+                    <div class="mb-3">
+                        <label for="editOrganisation" class="form-label">Organisation:</label>
+                        <input type="text" id="editOrganisation" class="form-control">
+                    </div>
 
-            <label for="editBookingDate">Date:</label>
-            <input type="date" id="editBookingDate"><br>
+                    <div class="mb-3">
+                        <label for="editRepresentative" class="form-label">Representative:</label>
+                        <input type="text" id="editRepresentative" class="form-control">
+                    </div>
 
-            <!-- For booking customer info -->
-            <label for="editOrganisation">Organisation:</label>
-            <input type="text" id="editOrganisation"><br>
+                    <div class="mb-3">
+                        <label for="editPhone" class="form-label">Phone:</label>
+                        <input type="text" id="editPhone" class="form-control">
+                    </div>
 
-            <label for="editRepresentative">Representative:</label>
-            <input type="text" id="editRepresentative"><br>
-
-            <label for="editPhone">Phone:</label>
-            <input type="text" id="editPhone"><br>
-
-            <label for="editEmail">Email:</label>
-            <input type="email" id="editEmail"><br>
-
-            <button type="submit" id="updateBookingBtn">Update Booking</button>
-            <button type="button" id="deleteBookingBtn">Delete Booking</button>
-            <button type="button" id="cancelEditBooking">Cancel</button>
-        </form>
+                    <div class="mb-3">
+                        <label for="editEmail" class="form-label">Email:</label>
+                        <input type="email" id="editEmail" class="form-control">
+                    </div>
+                </div>
+                <div class="modal-footer">
+                    <button type="submit" id="updateBookingBtn" class="btn btn-primary">Update Booking</button>
+                    <button type="button" id="deleteBookingBtn" class="btn btn-danger">Delete Booking</button>
+                    <button type="button" class="btn btn-secondary" data-bs-dismiss="modal" id="cancelEditBooking">Cancel</button>
+                </div>
+            </form>
+        </div>
     </div>
 {% endblock %}

@@ -1,8 +1,18 @@
+// booking.js
 document.addEventListener('DOMContentLoaded', () => {
+    // ----------------------------------------------------------------
+    // BOOTSTRAP MODAL INSTANCES
+    // We'll create them once so we can call show/hide easily.
+    // Make sure <script src="...bootstrap.bundle.min.js"></script> is loaded in base.html.twig
+    // ----------------------------------------------------------------
+    const bookingModalElement = document.getElementById('bookingModal');
+    const bookingModalInstance = new bootstrap.Modal(bookingModalElement);
+
+    const editBookingModalElement = document.getElementById('editBookingModal');
+    const editBookingModalInstance = new bootstrap.Modal(editBookingModalElement);
+
     // Elements for creating a new booking
     const bookingContainer = document.getElementById('booking-grid');
-    const bookingModal = document.getElementById('bookingModal');
-    const modalOverlay = document.getElementById('modalOverlay');
     const bookingForm = document.getElementById('bookingForm');
     const cancelBookingButton = document.getElementById('cancelBooking');
     const addNewCustomerButton = document.getElementById('addNewCustomer');
@@ -11,53 +21,50 @@ document.addEventListener('DOMContentLoaded', () => {
     const addCustomerAjaxButton = document.getElementById('addCustomerAjax');
 
     // Elements for editing an existing booking (SECOND modal)
-    const editBookingOverlay = document.getElementById('editBookingOverlay'); // NEW
-    const editBookingModal = document.getElementById('editBookingModal');     // NEW
-    const editBookingForm = document.getElementById('editBookingForm');       // NEW
-    const cancelEditBookingButton = document.getElementById('cancelEditBooking'); // NEW
-    const updateBookingBtn = document.getElementById('updateBookingBtn');     // NEW
-    const deleteBookingBtn = document.getElementById('deleteBookingBtn');     // NEW
+    const editBookingForm = document.getElementById('editBookingForm');
+    const cancelEditBookingButton = document.getElementById('cancelEditBooking');
+    const updateBookingBtn = document.getElementById('updateBookingBtn');
+    const deleteBookingBtn = document.getElementById('deleteBookingBtn');
 
     // Hidden input for booking ID
-    const editBookingIdInput = document.getElementById('editBookingId');      // NEW
+    const editBookingIdInput = document.getElementById('editBookingId');
 
     // Fields for editing booking
-    const editBookingRoom = document.getElementById('editBookingRoom');       // NEW
-    const editBookingStart = document.getElementById('editBookingStart');     // NEW
-    const editBookingEnd = document.getElementById('editBookingEnd');         // NEW
-    const editBookingDate = document.getElementById('editBookingDate');       // NEW
-    const editOrganisation = document.getElementById('editOrganisation');     // NEW
-    const editRepresentative = document.getElementById('editRepresentative'); // NEW
-    const editPhone = document.getElementById('editPhone');                   // NEW
-    const editEmail = document.getElementById('editEmail');                   // NEW
+    const editBookingRoom = document.getElementById('editBookingRoom');
+    const editBookingStart = document.getElementById('editBookingStart');
+    const editBookingEnd = document.getElementById('editBookingEnd');
+    const editBookingDate = document.getElementById('editBookingDate');
+    const editOrganisation = document.getElementById('editOrganisation');
+    const editRepresentative = document.getElementById('editRepresentative');
+    const editPhone = document.getElementById('editPhone');
+    const editEmail = document.getElementById('editEmail');
 
     let isAddingNewCustomer = false; // Track if a new customer is being added
+
+    // For storing bookings in memory
+    let currentBookings = [];
 
     // Helper to check for element existence
     const checkElement = (element, elementName) => {
         if (!element) {
             console.error(`${elementName} not found in the DOM.`);
-            console.log("Current DOM structure:", document.body.innerHTML);
             return false;
         }
         return true;
     };
 
-    // Grab the page date from URL (e.g., ?date=2025-01-26)
+    // Grab the page date from URL
     const urlParams = new URLSearchParams(window.location.search);
     const pageDate = urlParams.get('date');
 
-    // We'll keep an in-memory store of bookings for quick access
-    let currentBookings = []; // NEW
-
-    // Filter logic: Only display bookings for 'pageDate'
+    // Load Bookings
     const loadBookings = async () => {
         try {
             const response = await fetch('/api/bookings');
             if (!response.ok) throw new Error(`HTTP error! Status: ${response.status}`);
 
             const allBookings = await response.json();
-            // If 'pageDate' is set in the URL, we only load that day's bookings
+            // Filter if date is set
             currentBookings = pageDate
                 ? allBookings.filter(b => b.date === pageDate)
                 : allBookings;
@@ -66,8 +73,6 @@ document.addEventListener('DOMContentLoaded', () => {
                 const startTime = parseInt(booking.time_start.split(':')[0]);
                 const endTime = parseInt(booking.time_end.split(':')[0]);
                 const roomName = booking.room_id;
-
-                console.log(`Processing booking: ${JSON.stringify(booking)}`);
 
                 const slots = [];
                 for (let time = startTime; time < endTime; time++) {
@@ -88,12 +93,10 @@ document.addEventListener('DOMContentLoaded', () => {
                     firstSlot.style.color = 'white';
                     firstSlot.style.textAlign = 'center';
 
-                    // Store booking.id (or some unique ID) on the slot for easy reference
-                    firstSlot.dataset.bookingId = booking.id; // NEW
+                    // Attach booking ID for editing
+                    firstSlot.dataset.bookingId = booking.id;
 
                     slots.slice(1).forEach(slot => (slot.style.display = 'none'));
-                } else {
-                    console.warn(`No slots found for booking: ${JSON.stringify(booking)}`);
                 }
             });
         } catch (error) {
@@ -101,7 +104,7 @@ document.addEventListener('DOMContentLoaded', () => {
         }
     };
 
-    // Load customers into the dropdown
+    // Load Customers
     const loadCustomers = async () => {
         try {
             const response = await fetch('/api/customers');
@@ -134,10 +137,9 @@ document.addEventListener('DOMContentLoaded', () => {
         });
     }
 
-    // "Add" button for new customer creation via AJAX
+    // Add new customer via AJAX
     if (checkElement(addCustomerAjaxButton, "Add Customer Ajax button")) {
         addCustomerAjaxButton.addEventListener('click', async () => {
-            // Gather the new customer fields
             const organisation = document.getElementById('organisation').value.trim();
             const representative = document.getElementById('representative').value.trim();
             const phone = document.getElementById('phone').value.trim();
@@ -148,17 +150,10 @@ document.addEventListener('DOMContentLoaded', () => {
                 return;
             }
 
-            const newCustomerDetails = {
-                organisation,
-                representative,
-                phone,
-                email
-            };
-
             try {
                 const response = await fetch('/api/customers', {
                     method: 'POST',
-                    body: JSON.stringify(newCustomerDetails),
+                    body: JSON.stringify({ organisation, representative, phone, email }),
                     headers: { 'Content-Type': 'application/json' },
                 });
 
@@ -171,16 +166,13 @@ document.addEventListener('DOMContentLoaded', () => {
                 const result = await response.json();
                 console.log('New customer added:', result);
 
-                // Add new option to the existing customer dropdown
+                // Add new option
                 const option = document.createElement('option');
                 option.value = representative;
                 option.textContent = `${representative} (${organisation})`;
                 existingCustomerDropdown.appendChild(option);
 
-                // Select the newly added customer in the dropdown
                 existingCustomerDropdown.value = representative;
-
-                // Hide the new customer fields
                 newCustomerFields.style.display = 'none';
                 isAddingNewCustomer = false;
 
@@ -192,64 +184,167 @@ document.addEventListener('DOMContentLoaded', () => {
         });
     }
 
-    // Reset modal fields
-    const resetModalFields = () => {
+    // ----------------------------------------------------------------
+    // DRAG SELECT LOGIC
+    // ----------------------------------------------------------------
+    let isDragging = false;
+    let dragStartTime = null;
+    let dragEndTime = null;
+    let activeRoomId = null;
+    let dragSelectedSlots = [];
+
+    const clearDragHighlights = () => {
+        dragSelectedSlots.forEach(slot => slot.classList.remove('drag-select'));
+        dragSelectedSlots = [];
+    };
+
+    if (checkElement(bookingContainer, "Booking container")) {
+        bookingContainer.addEventListener('mousedown', (event) => {
+            if (event.target.classList.contains('booked')) {
+                // It's a booked slot -> skip highlight drag
+                return;
+            }
+            if (event.target.classList.contains('time-slot')) {
+                isDragging = true;
+                dragStartTime = parseInt(event.target.dataset.time, 10);
+                dragEndTime = dragStartTime;
+                activeRoomId = event.target.dataset.roomId;
+
+                clearDragHighlights();
+                event.target.classList.add('drag-select');
+                dragSelectedSlots.push(event.target);
+            }
+        });
+
+        bookingContainer.addEventListener('mouseover', (event) => {
+            if (
+                isDragging &&
+                event.target.classList.contains('time-slot') &&
+                event.target.dataset.roomId === activeRoomId
+            ) {
+                const currentDragTime = parseInt(event.target.dataset.time, 10);
+
+                const minTime = Math.min(dragStartTime, currentDragTime);
+                const maxTime = Math.max(dragStartTime, currentDragTime);
+
+                clearDragHighlights();
+                for (let t = minTime; t <= maxTime; t++) {
+                    const slot = document.querySelector(
+                        `.time-slot[data-room-id="${activeRoomId}"][data-time="${t}"]`
+                    );
+                    if (slot) {
+                        slot.classList.add('drag-select');
+                        dragSelectedSlots.push(slot);
+                    }
+                }
+                dragEndTime = currentDragTime;
+            }
+        });
+
+        bookingContainer.addEventListener('mouseup', () => {
+            if (isDragging) {
+                isDragging = false;
+
+                const start = Math.min(dragStartTime, dragEndTime);
+                const end = Math.max(dragStartTime, dragEndTime) + 1;
+                const roomId = activeRoomId;
+
+                clearDragHighlights();
+                openCreateBookingModal(roomId, start, end);
+
+                activeRoomId = null;
+                dragStartTime = null;
+                dragEndTime = null;
+            }
+        });
+
+        // 1) If user clicks a booked slot, open the edit modal
+        bookingContainer.addEventListener('click', async (event) => {
+            if (event.target.classList.contains('booked')) {
+                const bookingId = event.target.dataset.bookingId;
+                if (!bookingId) {
+                    console.error("No booking ID found on this slot.");
+                    return;
+                }
+                await openEditModal(bookingId);
+            }
+        });
+    }
+
+    // ----------------------------------------------------------------
+    // CREATE BOOKING - BOOTSTRAP MODAL
+    // ----------------------------------------------------------------
+    const openCreateBookingModal = (roomId, startTime, endTime) => {
+        const roomSlot = document.querySelector(`.time-slot[data-room-id="${roomId}"]`);
+        if (!roomSlot) {
+            console.error("Room element not found for ID:", roomId);
+            return;
+        }
+
+        document.getElementById('bookingRoom').value = roomSlot.dataset.roomName;
+        document.getElementById('bookingStart').value = String(startTime).padStart(2, '0') + ':00';
+        document.getElementById('bookingEnd').value = String(endTime).padStart(2, '0') + ':00';
+        document.getElementById('bookingDate').value = pageDate || new Date().toISOString().split('T')[0];
+
+        // Show the Bootstrap modal
+        bookingModalInstance.show();
+    };
+
+    const closeCreateBookingModal = () => {
+        bookingModalInstance.hide();
         bookingForm.reset();
         existingCustomerDropdown.value = '';
         newCustomerFields.style.display = 'none';
         isAddingNewCustomer = false;
     };
 
-    // Close modal for creation
-    const closeModal = () => {
-        bookingModal.style.display = 'none';
-        modalOverlay.style.display = 'none';
-        resetModalFields();
-    };
+    // Create booking form submission
+    bookingForm.addEventListener('submit', async (event) => {
+        event.preventDefault();
 
-    // Open modal for creation
-    const openModal = (roomId, startTime, endTime) => {
-        const roomNameElement = document.querySelector(`.time-slot[data-room-id="${roomId}"]`);
-        if (!roomNameElement) {
-            console.error("Room element not found for ID:", roomId);
-            return;
-        }
+        const bookingDetails = {
+            room: document.getElementById('bookingRoom').value,
+            time_start: document.getElementById('bookingStart').value,
+            time_end: document.getElementById('bookingEnd').value,
+            date: document.getElementById('bookingDate').value,
+            booked_by: isAddingNewCustomer
+                ? document.getElementById('representative').value
+                : existingCustomerDropdown.value,
+            recurring: (document.getElementById('recurring')?.value || 'none').toLowerCase(),
+        };
 
-        const roomName = roomNameElement.dataset.roomName;
+        try {
+            const response = await fetch('/api/bookings', {
+                method: 'POST',
+                body: JSON.stringify(bookingDetails),
+                headers: { 'Content-Type': 'application/json' },
+            });
 
-        document.getElementById('bookingRoom').value = roomName;
-        document.getElementById('bookingStart').value = String(startTime).padStart(2, '0') + ':00';
-        document.getElementById('bookingEnd').value = String(endTime).padStart(2, '0') + ':00';
-        document.getElementById('bookingDate').value = pageDate || new Date().toISOString().split('T')[0];
-
-        // Show the overlay + modal
-        modalOverlay.style.display = 'block';
-        bookingModal.style.display = 'block';
-    };
-
-    // ----------------------------------------------------------------
-    // NEW: EDIT-BOOKING (SECOND MODAL) LOGIC
-    // ----------------------------------------------------------------
-
-    // 1) Open the second modal when clicking on an already-booked slot
-    bookingContainer.addEventListener('click', async (event) => {
-        if (event.target.classList.contains('booked')) {
-            const bookingId = event.target.dataset.bookingId;
-            if (!bookingId) {
-                console.error("No booking ID found on this slot.");
-                return;
+            if (!response.ok) {
+                const errorText = await response.text();
+                throw new Error('Failed to create booking. ' + errorText);
             }
-            // show the Edit Booking modal
-            await openEditModal(bookingId);
+
+            alert('Booking created successfully!');
+            closeCreateBookingModal();
+            location.reload(); // Refresh to see new booking
+        } catch (error) {
+            console.error('Error creating booking:', error);
+            alert(`Error: ${error.message}`);
         }
     });
 
-    // 2) openEditModal function
+    if (checkElement(cancelBookingButton, "Cancel Booking button")) {
+        cancelBookingButton.addEventListener('click', () => {
+            closeCreateBookingModal();
+        });
+    }
+
+    // ----------------------------------------------------------------
+    // EDIT BOOKING - BOOTSTRAP MODAL
+    // ----------------------------------------------------------------
     const openEditModal = async (bookingId) => {
         try {
-            // Option A: We could fetch booking details from the server:
-            // e.g., GET /api/bookings/:id
-            // For simplicity, we'll see if we already have it in currentBookings
             let bookingData = currentBookings.find(b => b.id == bookingId);
 
             if (!bookingData) {
@@ -259,38 +354,27 @@ document.addEventListener('DOMContentLoaded', () => {
                 bookingData = await resp.json();
             }
 
-            // Now populate the form
             editBookingIdInput.value = bookingId;
             editBookingRoom.value = bookingData.room_id; // read-only
             editBookingStart.value = bookingData.time_start;
             editBookingEnd.value = bookingData.time_end;
             editBookingDate.value = bookingData.date;
-
-            // If bookingData has attached customer data:
-            // e.g. bookingData.customer = { organisation, representative, phone, email }
-            // you might need to fetch that from a different endpoint or from the same booking object
-            // Example:
             editOrganisation.value = bookingData.organisation || '';
             editRepresentative.value = bookingData.booked_by || '';
             editPhone.value = bookingData.phone || '';
             editEmail.value = bookingData.email || '';
 
-            // Show overlay + modal
-            editBookingOverlay.style.display = 'block';
-            editBookingModal.style.display = 'block';
-
+            // Show the Bootstrap modal
+            editBookingModalInstance.show();
         } catch (err) {
             console.error("Error opening edit modal:", err);
             alert("Could not load booking details. See console.");
         }
     };
 
-    // 3) Cancel button for the edit modal
     const closeEditModal = () => {
-        editBookingOverlay.style.display = 'none';
-        editBookingModal.style.display = 'none';
+        editBookingModalInstance.hide();
         editBookingForm.reset();
-        // Clear hidden ID
         editBookingIdInput.value = '';
     };
 
@@ -298,10 +382,9 @@ document.addEventListener('DOMContentLoaded', () => {
         cancelEditBookingButton.addEventListener('click', closeEditModal);
     }
 
-    // 4) Update the booking
     if (checkElement(updateBookingBtn, "Update Booking button")) {
         updateBookingBtn.addEventListener('click', async (e) => {
-            e.preventDefault(); // don't let form submission reload page
+            e.preventDefault();
 
             const bookingId = editBookingIdInput.value;
             if (!bookingId) {
@@ -309,9 +392,8 @@ document.addEventListener('DOMContentLoaded', () => {
                 return;
             }
 
-            // Gather updated details
             const payload = {
-                room_id: editBookingRoom.value,  // might remain read-only
+                room_id: editBookingRoom.value,
                 time_start: editBookingStart.value,
                 time_end: editBookingEnd.value,
                 date: editBookingDate.value,
@@ -323,7 +405,7 @@ document.addEventListener('DOMContentLoaded', () => {
 
             try {
                 const resp = await fetch(`/api/bookings/${bookingId}`, {
-                    method: 'PUT', // or PATCH, depending on your API
+                    method: 'PUT', // or PATCH
                     headers: { 'Content-Type': 'application/json' },
                     body: JSON.stringify(payload),
                 });
@@ -341,7 +423,6 @@ document.addEventListener('DOMContentLoaded', () => {
         });
     }
 
-    // 5) Delete booking
     if (checkElement(deleteBookingBtn, "Delete Booking button")) {
         deleteBookingBtn.addEventListener('click', async (e) => {
             e.preventDefault();
@@ -370,82 +451,5 @@ document.addEventListener('DOMContentLoaded', () => {
                 alert(error.message);
             }
         });
-    }
-
-    // -------------------------------------------------------------
-    // DRAGGING LOGIC for creating new booking
-    // -------------------------------------------------------------
-    let isDragging = false;
-    let dragStartTime = null;
-    let dragEndTime = null;
-
-    if (checkElement(bookingContainer, "Booking container")) {
-        bookingContainer.addEventListener('mousedown', (event) => {
-            if (event.target.classList.contains('time-slot')) {
-                isDragging = true;
-                dragStartTime = parseInt(event.target.dataset.time, 10);
-                dragEndTime = dragStartTime;
-            }
-        });
-
-        bookingContainer.addEventListener('mouseover', (event) => {
-            if (isDragging && event.target.classList.contains('time-slot')) {
-                const currentDragTime = parseInt(event.target.dataset.time, 10);
-                if (currentDragTime > dragEndTime) {
-                    dragEndTime = currentDragTime;
-                }
-            }
-        });
-
-        bookingContainer.addEventListener('mouseup', (event) => {
-            if (isDragging) {
-                isDragging = false;
-                const roomId = event.target.dataset.roomId;
-                openModal(roomId, dragStartTime, dragEndTime + 1);
-            }
-        });
-    }
-
-    // Submit booking form (create)
-    bookingForm.addEventListener('submit', async (event) => {
-        event.preventDefault();
-
-        const bookingDetails = {
-            room: document.getElementById('bookingRoom').value,
-            time_start: document.getElementById('bookingStart').value,
-            time_end: document.getElementById('bookingEnd').value,
-            date: document.getElementById('bookingDate').value,
-            booked_by: isAddingNewCustomer
-                ? document.getElementById('representative').value
-                : existingCustomerDropdown.value,
-            recurring: (document.getElementById('recurring')?.value || 'none').toLowerCase(),
-        };
-
-        console.log('Payload being sent (create booking):', bookingDetails);
-
-        try {
-            const response = await fetch('/api/bookings', {
-                method: 'POST',
-                body: JSON.stringify(bookingDetails),
-                headers: { 'Content-Type': 'application/json' },
-            });
-
-            if (!response.ok) {
-                const errorText = await response.text();
-                console.error('Error response:', errorText);
-                throw new Error('Failed to create booking. See console for details.');
-            }
-
-            alert('Booking created successfully!');
-            closeModal();
-            location.reload();
-        } catch (error) {
-            console.error('Error creating booking:', error);
-            alert(`Error: ${error.message}`);
-        }
-    });
-
-    if (checkElement(cancelBookingButton, "Cancel Booking button")) {
-        cancelBookingButton.addEventListener('click', closeModal);
     }
 });
