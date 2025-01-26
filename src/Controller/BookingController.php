@@ -288,4 +288,28 @@ class BookingController extends AbstractController
 
         return $dates;
     }
+
+    // src/Controller/BookingController.php
+
+    #[Route('/api/bookings/{id}', name: 'api_booking_update', methods: ['PUT'])]
+    public function updateBooking(Request $request, Booking $booking, EntityManagerInterface $em): JsonResponse
+    {
+        // parse JSON
+        $data = json_decode($request->getContent(), true);
+        // e.g. $booking->setTimeStart($data['time_start']); etc.
+        // update linked BookingCustomer if you store that relationship
+        $em->flush();
+
+        return new JsonResponse(['message' => 'Booking updated'], 200);
+    }
+
+    #[Route('/api/bookings/{id}', name: 'api_booking_delete', methods: ['DELETE'])]
+    public function deleteBooking(Booking $booking, EntityManagerInterface $em): JsonResponse
+    {
+        $em->remove($booking);
+        $em->flush();
+
+        return new JsonResponse(['message' => 'Booking deleted'], 200);
+    }
+
 }

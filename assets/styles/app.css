@@ -17,6 +17,7 @@ body {
     vertical-align: middle;
 }
 
+/* First (existing) modal & overlay */
 #bookingModal {
     position: fixed;
     top: 30%;
@@ -26,7 +27,7 @@ body {
     padding: 20px;
     border: 1px solid lightgray;
     box-shadow: 0 4px 8px rgba(0, 0, 0, 0.1);
-    z-index: 1000;
+    z-index: 10010;
 }
 
 #modalOverlay {
@@ -36,5 +37,38 @@ body {
     width: 100%;
     height: 100%;
     background: rgba(0, 0, 0, 0.5);
-    z-index: 999;
+    z-index: 10000;
+}
+
+#modalOverlay,
+#bookingModal {
+    display: none !important;  /* hide by default */
+}
+
+/* SECOND (new) edit modal & overlay */
+#editBookingModal {
+    position: fixed;
+    top: 30%;
+    left: 50%;
+    transform: translate(-50%, -50%);
+    background: white;
+    padding: 20px;
+    border: 1px solid lightgray;
+    box-shadow: 0 4px 8px rgba(0, 0, 0, 0.1);
+    z-index: 10020; /* slightly higher than the first modal */
+}
+
+#editBookingOverlay {
+    position: fixed;
+    top: 0;
+    left: 0;
+    width: 100%;
+    height: 100%;
+    background: rgba(0, 0, 0, 0.5);
+    z-index: 10015; /* sits between the old overlay and new modal */
+}
+
+#editBookingOverlay,
+#editBookingModal {
+    display: none; /* hide by default */
 }

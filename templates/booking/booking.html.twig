@@ -4,7 +4,9 @@
 
 {% block body %}
     <h2>Booking for {{ date }}</h2>
-    <div id="booking-grid" style="display: grid; grid-template-columns: auto repeat({{ rooms|length }}, 1fr); gap: 1px; background: lightgray; max-width: 100%; margin: 50px auto;">
+    <div id="booking-grid"
+         style="display: grid; grid-template-columns: auto repeat({{ rooms|length }}, 1fr);
+                 gap: 1px; background: lightgray; max-width: 100%; margin: 50px auto;">
         <!-- Column Headers -->
         <div></div> <!-- Empty cell for time column -->
         {% for room in rooms %}
@@ -24,14 +26,16 @@
                      data-room-name="{{ room.roomName }}"
                      data-time="{{ hour }}"
                      style="background: white; height: 50px; cursor: pointer; border: 1px solid #ccc;">
+                    <!-- This slot might get dynamically assigned .booked in JS -->
                 </div>
             {% endfor %}
         {% endfor %}
     </div>
 
-    <div id="modalOverlay" style="display: none;"></div>
+    <!-- 1) Existing overlay + creation modal -->
+    <div id="modalOverlay"></div>
 
-    <div id="bookingModal" style="display: none;">
+    <div id="bookingModal">
         <form id="bookingForm">
             <h3>Create Booking</h3>
 
@@ -69,7 +73,7 @@
                 <label for="email">Email:</label>
                 <input type="email" id="email"><br>
 
-                <!-- NEW "Add" button for AJAX customer creation -->
+                <!-- "Add" button for AJAX customer creation -->
                 <button type="button" id="addCustomerAjax">Add</button>
             </div>
 
@@ -85,6 +89,47 @@
 
             <button type="submit">Save Booking</button>
             <button type="button" id="cancelBooking">Cancel</button>
+        </form>
+    </div>
+
+    <!-- 2) New overlay + edit modal -->
+    <div id="editBookingOverlay"></div>
+
+    <div id="editBookingModal">
+        <form id="editBookingForm">
+            <h3>Edit Booking</h3>
+
+            <!-- Hidden ID to know which booking we are editing -->
+            <input type="hidden" id="editBookingId">
+
+            <label for="editBookingRoom">Room:</label>
+            <input type="text" id="editBookingRoom" readonly><br>
+
+            <label for="editBookingStart">Start Time:</label>
+            <input type="time" id="editBookingStart"><br>
+
+            <label for="editBookingEnd">End Time:</label>
+            <input type="time" id="editBookingEnd"><br>
+
+            <label for="editBookingDate">Date:</label>
+            <input type="date" id="editBookingDate"><br>
+
+            <!-- For booking customer info -->
+            <label for="editOrganisation">Organisation:</label>
+            <input type="text" id="editOrganisation"><br>
+
+            <label for="editRepresentative">Representative:</label>
+            <input type="text" id="editRepresentative"><br>
+
+            <label for="editPhone">Phone:</label>
+            <input type="text" id="editPhone"><br>
+
+            <label for="editEmail">Email:</label>
+            <input type="email" id="editEmail"><br>
+
+            <button type="submit" id="updateBookingBtn">Update Booking</button>
+            <button type="button" id="deleteBookingBtn">Delete Booking</button>
+            <button type="button" id="cancelEditBooking">Cancel</button>
         </form>
     </div>
 {% endblock %}
