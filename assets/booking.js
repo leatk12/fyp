@@ -8,7 +8,6 @@ document.addEventListener('DOMContentLoaded', () => {
     const addNewCustomerButton = document.getElementById('addNewCustomer');
     const newCustomerFields = document.getElementById('newCustomerFields');
     const existingCustomerDropdown = document.getElementById('existingCustomer');
-    const recurringDropdown = document.getElementById('recurring');
 
     let isAddingNewCustomer = false; // Track if a new customer is being added
 
@@ -22,22 +21,33 @@ document.addEventListener('DOMContentLoaded', () => {
         return true;
     };
 
-    // Load bookings and update the grid
+    // Parse the "date" query parameter from the URL (e.g. ?date=YYYY-MM-DD)
+    const urlParams = new URLSearchParams(window.location.search);
+    const pageDate = urlParams.get('date');
+    // Example: pageDate might be "2025-01-26"
+
+    // Load bookings and only display those matching pageDate
     const loadBookings = async () => {
         try {
             const response = await fetch('/api/bookings');
             if (!response.ok) throw new Error(`HTTP error! Status: ${response.status}`);
 
-            const bookings = await response.json();
+            const allBookings = await response.json();
 
+            // Filter to only bookings that match this page's date (if pageDate is present)
+            const bookings = pageDate
+                ? allBookings.filter(b => b.date === pageDate)
+                : allBookings; // If for some reason pageDate is null, show all
+
+            // Now only loop over bookings for this date
             bookings.forEach(booking => {
                 const startTime = parseInt(booking.time_start.split(':')[0]);
                 const endTime = parseInt(booking.time_end.split(':')[0]);
-                const roomName = booking.room_id; // Now using roomName
+                const roomName = booking.room_id;
 
                 console.log(`Processing booking: ${JSON.stringify(booking)}`);
 
-                // Get all affected time slots for the booking
+                // Collect all time slots between startTime and endTime
                 const slots = [];
                 for (let time = startTime; time < endTime; time++) {
                     const slot = document.querySelector(
@@ -54,7 +64,7 @@ document.addEventListener('DOMContentLoaded', () => {
                     // Merge cells by setting `gridRow` span
                     firstSlot.style.gridRow = `span ${totalRows}`;
                     firstSlot.classList.add('booked');
-                    firstSlot.textContent = booking.booked_by; // Display `booked_by` in the cell
+                    firstSlot.textContent = booking.booked_by;
                     firstSlot.style.backgroundColor = 'blue';
                     firstSlot.style.color = 'white';
                     firstSlot.style.textAlign = 'center';
@@ -88,35 +98,18 @@ document.addEventListener('DOMContentLoaded', () => {
         }
     };
 
-    // Load recurrence options into the dropdown
-    const loadRecurrences = async () => {
-        try {
-            const response = await fetch('/api/recurrences');
-            if (!response.ok) throw new Error(`HTTP error! Status: ${response.status}`);
-
-            const recurrences = await response.json();
-            recurrences.forEach(recurrence => {
-                const option = document.createElement('option');
-                option.value = recurrence.recurring;
-                option.textContent = recurrence.recurring;
-                recurringDropdown.appendChild(option);
-            });
-        } catch (error) {
-            console.error('Error loading recurrences:', error);
-        }
-    };
-
     // Initialize data
     loadBookings();
     loadCustomers();
-    loadRecurrences();
 
     // Toggle new customer fields
     if (checkElement(addNewCustomerButton, "Add New Customer button")) {
         addNewCustomerButton.addEventListener('click', () => {
             isAddingNewCustomer = !isAddingNewCustomer;
             newCustomerFields.style.display = isAddingNewCustomer ? 'block' : 'none';
-            if (!isAddingNewCustomer) existingCustomerDropdown.value = ''; // Clear existing customer selection
+            if (!isAddingNewCustomer) {
+                existingCustomerDropdown.value = '';
+            }
         });
     }
 
@@ -124,7 +117,6 @@ document.addEventListener('DOMContentLoaded', () => {
     const resetModalFields = () => {
         bookingForm.reset();
         existingCustomerDropdown.value = '';
-        recurringDropdown.value = '';
         newCustomerFields.style.display = 'none';
         isAddingNewCustomer = false;
     };
@@ -149,23 +141,24 @@ document.addEventListener('DOMContentLoaded', () => {
         document.getElementById('bookingRoom').value = roomName;
         document.getElementById('bookingStart').value = startTime.toString().padStart(2, '0') + ':00';
         document.getElementById('bookingEnd').value = endTime.toString().padStart(2, '0') + ':00';
-        document.getElementById('bookingDate').value = new Date().toISOString().split('T')[0];
+        // Default to the pageDate if available, otherwise today's date
+        document.getElementById('bookingDate').value = pageDate || new Date().toISOString().split('T')[0];
 
         bookingModal.style.display = 'block';
         modalOverlay.style.display = 'block';
     };
 
-    // Event listener for opening the modal with grid dragging
     let isDragging = false;
     let dragStartTime = null;
     let dragEndTime = null;
 
+    // If bookingContainer is found, add drag booking logic
     if (checkElement(bookingContainer, "Booking container")) {
         bookingContainer.addEventListener('mousedown', (event) => {
             if (event.target.classList.contains('time-slot')) {
                 isDragging = true;
                 dragStartTime = parseInt(event.target.dataset.time, 10);
-                dragEndTime = dragStartTime; // Default to the same time
+                dragEndTime = dragStartTime;
             }
         });
 
@@ -181,7 +174,6 @@ document.addEventListener('DOMContentLoaded', () => {
         bookingContainer.addEventListener('mouseup', (event) => {
             if (isDragging) {
                 isDragging = false;
-
                 const roomId = event.target.dataset.roomId;
                 openModal(roomId, dragStartTime, dragEndTime + 1);
             }
@@ -197,35 +189,32 @@ document.addEventListener('DOMContentLoaded', () => {
             time_start: document.getElementById('bookingStart').value,
             time_end: document.getElementById('bookingEnd').value,
             date: document.getElementById('bookingDate').value,
-            recurring: recurringDropdown?.value || null,
+            booked_by: isAddingNewCustomer
+                ? document.getElementById('representative').value
+                : existingCustomerDropdown.value,
         };
 
-        if (isAddingNewCustomer) {
-            const representative = document.getElementById('representative').value;
-            if (!representative) {
-                alert('Representative is required.');
-                return;
-            }
-            bookingDetails.booked_by = representative;
-        } else {
-            bookingDetails.booked_by = existingCustomerDropdown.value;
-        }
+        console.log('Payload being sent:', bookingDetails);
 
         try {
-            const response = await fetch('/api/bookings', {
+            const response = await fetch('/api/bookings_no_recurrence', {
                 method: 'POST',
                 body: JSON.stringify(bookingDetails),
                 headers: { 'Content-Type': 'application/json' },
             });
 
-            if (!response.ok) throw new Error('Failed to create booking.');
+            if (!response.ok) {
+                const errorText = await response.text();
+                console.error('Error response:', errorText);
+                throw new Error('Failed to create booking. See console for details.');
+            }
 
-            closeModal();
             alert('Booking created successfully!');
+            closeModal();
             location.reload();
         } catch (error) {
             console.error('Error creating booking:', error);
-            alert('Error: ' + error.message);
+            alert(`Error: ${error.message}`);
         }
     });
 

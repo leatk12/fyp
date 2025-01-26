@@ -32,9 +32,9 @@ class Booking
     #[ORM\Column]
     private ?int $cust_id = null;
 
-    #[ORM\ManyToOne(targetEntity: Recurrence::class)]
-    #[ORM\JoinColumn(nullable: true)] // Allow this field to be null
-    private ?Recurrence $recurring = null;
+//    #[ORM\ManyToOne(targetEntity: Recurrence::class, inversedBy: 'bookings')]
+//    #[ORM\JoinColumn(nullable: true)]
+//    private ?Recurrence $recurring = null;
 
     public function getId(): ?int
     {
@@ -113,15 +113,15 @@ class Booking
         return $this;
     }
 
-    public function getRecurring(): ?Recurrence
-    {
-        return $this->recurring;
-    }
-
-    public function setRecurring(?Recurrence $recurring): static
-    {
-        $this->recurring = $recurring;
-
-        return $this;
-    }
+//    public function getRecurring(): ?Recurrence
+//    {
+//        return $this->recurring;
+//    }
+//
+//    public function setRecurring(?Recurrence $recurring): static
+//    {
+//        $this->recurring = $recurring;
+//
+//        return $this;
+//    }
 }
