@@ -1,22 +1,42 @@
 security:
     # https://symfony.com/doc/current/security.html#registering-the-user-hashing-passwords
+    # 1) Define separate hashers for your two entities (Manager and FinanceOfficer).
+    #    We remove the old "Symfony\Component\Security\Core\User\PasswordAuthenticatedUserInterface: 'auto'"
+    #    and replace it with explicit references to your entities.
     password_hashers:
-        Symfony\Component\Security\Core\User\PasswordAuthenticatedUserInterface: 'auto'
+        App\Entity\FinanceOfficer: 'auto'
+        App\Entity\Manager: 'auto'
+
     # https://symfony.com/doc/current/security.html#loading-the-user-the-user-provider
     providers:
-        # used to reload user from session & other features (e.g. switch_user)
-        app_user_provider:
+        # 2) Define a provider for Manager:
+        manager_provider:
+            entity:
+                class: App\Entity\Manager
+                property: email
+
+        # 3) Define a provider for FinanceOfficer:
+        finance_officer_provider:
             entity:
                 class: App\Entity\FinanceOfficer
                 property: email
-        # used to reload user from session & other features (e.g. switch_user)
+
+        # 4) Create a chain provider that checks Manager first, then FinanceOfficer (or vice versa).
+        chain_provider:
+            chain:
+                providers: [manager_provider, finance_officer_provider]
+
     firewalls:
         dev:
             pattern: ^/(_(profiler|wdt)|css|images|js)/
             security: false
+
         main:
             lazy: true
-            provider: app_user_provider
+
+            # 5) Use the chain provider here, so the firewall checks both Manager and FinanceOfficer
+            provider: chain_provider
+
             custom_authenticator: App\Security\UserAuthenticator
             logout:
                 path: app_logout
@@ -40,18 +60,21 @@ security:
     # Easy way to control access for large sections of your site
     # Note: Only the *first* access control that matches will be used
     access_control:
-        # - { path: ^/admin, roles: ROLE_ADMIN }
-        # - { path: ^/profile, roles: ROLE_USER }
+    # - { path: ^/admin, roles: ROLE_ADMIN }
+    # - { path: ^/profile, roles: ROLE_USER }
 
 when@test:
     security:
+        # In test environment, define minimal workload for password hashing
         password_hashers:
-            # By default, password hashers are resource intensive and take time. This is
-            # important to generate secure password hashes. In tests however, secure hashes
-            # are not important, waste resources and increase test times. The following
-            # reduces the work factor to the lowest possible values.
-            Symfony\Component\Security\Core\User\PasswordAuthenticatedUserInterface:
+            App\Entity\FinanceOfficer:
                 algorithm: auto
-                cost: 4 # Lowest possible value for bcrypt
+                cost: 4      # Lowest possible value for bcrypt
                 time_cost: 3 # Lowest possible value for argon
                 memory_cost: 10 # Lowest possible value for argon
+
+            App\Entity\Manager:
+                algorithm: auto
+                cost: 4
+                time_cost: 3
+                memory_cost: 10

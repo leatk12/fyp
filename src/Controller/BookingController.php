@@ -97,7 +97,7 @@ class BookingController extends AbstractController
             // Generate all relevant dates based on recurrence
             $dates = $this->generateDates($date, $recurring);
 
-            // For each date, check conflict & create a booking if no conflict
+            // For each date, check conflict and create a booking if no conflict
             foreach ($dates as $bookingDate) {
                 $conflicts = $bookingRepo->createQueryBuilder('b')
                     ->where('b.room = :room')
@@ -111,11 +111,11 @@ class BookingController extends AbstractController
                     ->getResult();
 
                 if (count($conflicts) > 0) {
-                    // Skip insertion if there's a conflict on that date/time
+                    // Skip insertion if there is a conflict on that date/time
                     continue;
                 }
 
-                // Create & persist booking for that date
+                // Create and persist booking for that date
                 $booking = new Booking();
                 $booking->setDate($bookingDate);
                 $booking->setTimeStart($startTime);
@@ -140,7 +140,7 @@ class BookingController extends AbstractController
 
     /**
      * Returns all bookings as JSON (GET /api/bookings).
-     * The front end typically filters by date in booking.js.
+     * The front end filters by date in booking.js.
      */
     #[Route('/api/bookings', name: 'fetch_bookings', methods: ['GET'])]
     public function fetchBookings(
@@ -296,8 +296,7 @@ class BookingController extends AbstractController
     {
         // parse JSON
         $data = json_decode($request->getContent(), true);
-        // e.g. $booking->setTimeStart($data['time_start']); etc.
-        // update linked BookingCustomer if you store that relationship
+
         $em->flush();
 
         return new JsonResponse(['message' => 'Booking updated'], 200);

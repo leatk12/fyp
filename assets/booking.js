@@ -1,10 +1,7 @@
 // booking.js
 document.addEventListener('DOMContentLoaded', () => {
-    // ----------------------------------------------------------------
-    // BOOTSTRAP MODAL INSTANCES
-    // We'll create them once so we can call show/hide easily.
-    // Make sure <script src="...bootstrap.bundle.min.js"></script> is loaded in base.html.twig
-    // ----------------------------------------------------------------
+
+
     const bookingModalElement = document.getElementById('bookingModal');
     const bookingModalInstance = new bootstrap.Modal(bookingModalElement);
 
