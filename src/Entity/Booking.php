@@ -32,9 +32,16 @@ class Booking
     #[ORM\Column]
     private ?int $cust_id = null;
 
-    // ADDED: store how many times the recurrence repeats (if applicable).
     #[ORM\Column(nullable: true)]
     private ?int $recurrenceCount = null;
+
+    // ADDED: store a "seriesId" to group recurring bookings
+    #[ORM\Column(length: 36, nullable: true)]
+    private ?string $seriesId = null;
+
+    // ADDED: store the cost of this single booking
+    #[ORM\Column(nullable: true)]
+    private ?int $cost = null;
 
     public function getId(): ?int
     {
@@ -107,7 +114,6 @@ class Booking
         return $this;
     }
 
-    // GET/SET the new column
     public function getRecurrenceCount(): ?int
     {
         return $this->recurrenceCount;
@@ -116,6 +122,30 @@ class Booking
     public function setRecurrenceCount(?int $recurrenceCount): static
     {
         $this->recurrenceCount = $recurrenceCount;
+        return $this;
+    }
+
+    // GET/SET seriesId
+    public function getSeriesId(): ?string
+    {
+        return $this->seriesId;
+    }
+
+    public function setSeriesId(?string $seriesId): static
+    {
+        $this->seriesId = $seriesId;
+        return $this;
+    }
+
+    // GET/SET cost
+    public function getCost(): ?int
+    {
+        return $this->cost;
+    }
+
+    public function setCost(?int $cost): static
+    {
+        $this->cost = $cost;
         return $this;
     }
 }

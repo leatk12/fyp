@@ -25,6 +25,10 @@ class BookingCustomer
     #[ORM\Column(length: 255, nullable: true)]
     private ?string $email = null;
 
+    // ADDED: a new column to store the "customer type"
+    #[ORM\Column(length: 50, nullable: true)]
+    private ?string $type = null;
+
     public function getId(): ?int
     {
         return $this->id;
@@ -74,6 +78,18 @@ class BookingCustomer
     public function setEmail(?string $email): static
     {
         $this->email = $email;
+
+        return $this;
+    }
+
+    public function getType(): ?string
+    {
+        return $this->type;
+    }
+
+    public function setType(?string $type): static
+    {
+        $this->type = $type;
 
         return $this;
     }

@@ -100,6 +100,18 @@
                             <label for="email" class="form-label">Email:</label>
                             <input type="email" id="email" class="form-control">
                         </div>
+
+                        <!-- ADDED: Customer Type select -->
+                        <div class="mb-2">
+                            <label for="customerType" class="form-label">Customer Type:</label>
+                            <select id="customerType" class="form-select">
+                                <option value="individual">Individual</option>
+                                <option value="private">Private</option>
+                                <option value="community">Community</option>
+                            </select>
+                        </div>
+                        <!-- END ADDED -->
+
                         <!-- "Add" button for AJAX customer creation -->
                         <button type="button" class="btn btn-sm btn-primary" id="addCustomerAjax">Add</button>
                     </div>
@@ -116,7 +128,7 @@
                         </select>
                     </div>
 
-                    <!-- ADDED: Number of Occurrences Field -->
+                    <!-- Number of Occurrences Field -->
                     <div class="mb-3" id="recurrenceCountGroup" style="display: none;">
                         <label for="recurrenceCount" class="form-label">Number of Occurrences:</label>
                         <input

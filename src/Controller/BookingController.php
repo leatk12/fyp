@@ -5,34 +5,23 @@ namespace App\Controller;
 use Symfony\Bundle\FrameworkBundle\Controller\AbstractController;
 use Symfony\Component\HttpFoundation\Request;
 use Symfony\Component\HttpFoundation\JsonResponse;
-use Symfony\Component\HttpFoundation\Response;
 use Doctrine\ORM\EntityManagerInterface;
+use Symfony\Component\Routing\Annotation\Route;
 use App\Repository\BookingRepository;
 use App\Repository\RoomRepository;
 use App\Repository\BookingCustomerRepository;
-use Symfony\Component\Routing\Annotation\Route;
 use App\Entity\Booking;
 
-/**
- * This controller handles:
- * 1) Rendering the booking page (GET /booking).
- * 2) Creating bookings (POST /api/bookings) with optional recurrence.
- * 3) Fetching bookings/customers/rooms (GET /api/...).
- * 4) Adding new customers (POST /api/customers).
- */
+// We can use Symfony's Uuid (or a custom random approach)
+use Symfony\Component\Uid\Uuid;
+
 class BookingController extends AbstractController
 {
-    /**
-     * Displays the booking page (time slots & rooms) for a given date or today.
-     *
-     * @Route("/booking", name="app_booking")
-     */
     #[Route('/booking', name: 'app_booking')]
     public function index(
         Request $request,
         RoomRepository $roomRepository
-    ): Response {
-        // Retrieve ?date=YYYY-MM-DD or default to today's date
+    ): JsonResponse|\Symfony\Component\HttpFoundation\Response {
         $date = $request->query->get('date', (new \DateTime())->format('Y-m-d'));
         $rooms = $roomRepository->findAll();
 
@@ -42,25 +31,17 @@ class BookingController extends AbstractController
         ]);
     }
 
-    /**
-     * Creates booking record(s) based on 'recurring' in the payload:
-     *  - "none" (single date)
-     *  - "daily", "weekly", "monthly", "yearly" (multiple).
-     * Name: create_booking
-     * Method: POST
-     * URL: /api/bookings
-     */
     #[Route('/api/bookings', name: 'create_booking', methods: ['POST'])]
     public function createBooking(
         Request $request,
         EntityManagerInterface $em,
         BookingCustomerRepository $customerRepo,
-        BookingRepository $bookingRepo
+        BookingRepository $bookingRepo,
+        RoomRepository $roomRepo
     ): JsonResponse {
         try {
             $data = json_decode($request->getContent(), true);
 
-            // Ensure required fields are present
             if (
                 !isset($data['date']) ||
                 !isset($data['time_start']) ||
@@ -74,36 +55,41 @@ class BookingController extends AbstractController
                 );
             }
 
-            // Parse main booking info
             $roomName  = $data['room'];
             $startTime = new \DateTime($data['time_start']);
             $endTime   = new \DateTime($data['time_end']);
             $date      = new \DateTime($data['date']);
-            // "none", "daily", "weekly", "monthly", or "yearly"
-            $recurring = isset($data['recurring'])
-                ? strtolower($data['recurring'])
-                : 'none';
-
-            // parse the user-defined number of occurrences (default 1)
+            $recurring = isset($data['recurring']) ? strtolower($data['recurring']) : 'none';
             $recurrenceCount = $data['recurrence_count'] ?? 1;
-            $recurrenceCount = max(1, (int) $recurrenceCount);
+            $recurrenceCount = max(1, (int)$recurrenceCount);
 
-            // Locate the customer record
+            // 1) Locate the customer
             $customer = $customerRepo->findOneBy([
                 'representative' => $data['booked_by']
             ]);
             if (!$customer) {
-                return new JsonResponse(
-                    ['error' => 'Customer not found.'],
-                    400
-                );
+                return new JsonResponse(['error' => 'Customer not found.'], 400);
             }
 
-            // Generate all relevant dates based on recurrence + count
+            // 2) Locate the room (by roomName)
+            $room = $roomRepo->findOneBy(['roomName' => $roomName]);
+            if (!$room) {
+                return new JsonResponse(['error' => 'Room not found: '.$roomName], 400);
+            }
+
+            // Generate the set of dates
             $dates = $this->generateDates($date, $recurring, $recurrenceCount);
 
-            // For each date, check conflict and create a booking if no conflict
+            // 3) Generate a seriesId if the user selected a recurrence
+            // If you'd like to always have a seriesId (even for single-booking), you can always do this.
+            $seriesId = null;
+            if ($recurring !== 'none') {
+                // Use a random UUID or your own approach
+                $seriesId = Uuid::v4()->toRfc4122();
+            }
+
             foreach ($dates as $bookingDate) {
+                // Check conflicts
                 $conflicts = $bookingRepo->createQueryBuilder('b')
                     ->where('b.room = :room')
                     ->andWhere('b.date = :date')
@@ -116,11 +102,11 @@ class BookingController extends AbstractController
                     ->getResult();
 
                 if (count($conflicts) > 0) {
-                    // Skip insertion if there is a conflict on that date/time
+                    // skip this date
                     continue;
                 }
 
-                // Create and persist booking for that date
+                // 4) Create booking
                 $booking = new Booking();
                 $booking->setDate($bookingDate);
                 $booking->setTimeStart($startTime);
@@ -128,9 +114,17 @@ class BookingController extends AbstractController
                 $booking->setRoom($roomName);
                 $booking->setBookedBy($customer->getRepresentative());
                 $booking->setCustId($customer->getId());
-
-                // ADDED: store the user-chosen recurrence count
                 $booking->setRecurrenceCount($recurrenceCount);
+
+                // 5) If we have a seriesId (recurring != none), store it
+                if ($seriesId) {
+                    $booking->setSeriesId($seriesId);
+                }
+
+                // 6) Calculate cost based on room cost fields + customer's type
+                $customerType = $customer->getType(); // "individual","private","community"
+                $cost = $room->getCostForType($customerType); // method in Room entity
+                $booking->setCost($cost);
 
                 $em->persist($booking);
             }
@@ -139,21 +133,13 @@ class BookingController extends AbstractController
 
             return new JsonResponse(['status' => 'Booking(s) created.']);
         } catch (\Exception $e) {
-            return new JsonResponse(
-                ['error' => 'Internal Server Error: ' . $e->getMessage()],
-                500
-            );
+            return new JsonResponse(['error' => 'Internal Server Error: ' . $e->getMessage()], 500);
         }
     }
 
-    /**
-     * Returns all bookings as JSON (GET /api/bookings).
-     * The front end filters by date in booking.js.
-     */
     #[Route('/api/bookings', name: 'fetch_bookings', methods: ['GET'])]
-    public function fetchBookings(
-        BookingRepository $bookingRepository
-    ): JsonResponse {
+    public function fetchBookings(BookingRepository $bookingRepository): JsonResponse
+    {
         try {
             $bookings = $bookingRepository->findAll();
 
@@ -165,23 +151,18 @@ class BookingController extends AbstractController
                     'time_end'   => $booking->getTimeEnd()->format('H:i'),
                     'room_id'    => $booking->getRoom(),
                     'booked_by'  => $booking->getBookedBy(),
-                    // If you want to see the new column in JSON:
-                    // 'recurrence_count' => $booking->getRecurrenceCount(),
+                    'recurrence_count' => $booking->getRecurrenceCount(),
+                    'series_id'  => $booking->getSeriesId(),
+                    'cost'       => $booking->getCost(),
                 ];
             }, $bookings);
 
             return new JsonResponse($data);
         } catch (\Exception $e) {
-            return new JsonResponse(
-                ['error' => 'Internal Server Error: ' . $e->getMessage()],
-                500
-            );
+            return new JsonResponse(['error' => 'Internal Server Error: ' . $e->getMessage()], 500);
         }
     }
 
-    /**
-     * Provides a list of rooms in JSON format (GET /api/rooms).
-     */
     #[Route('/api/rooms', name: 'fetch_rooms', methods: ['GET'])]
     public function fetchRooms(RoomRepository $repository): JsonResponse
     {
@@ -194,13 +175,9 @@ class BookingController extends AbstractController
         return new JsonResponse($data);
     }
 
-    /**
-     * Provides a list of customers (GET /api/customers).
-     */
     #[Route('/api/customers', name: 'fetch_customers', methods: ['GET'])]
-    public function fetchCustomers(
-        BookingCustomerRepository $repository
-    ): JsonResponse {
+    public function fetchCustomers(BookingCustomerRepository $repository): JsonResponse
+    {
         $customers = $repository->findAll();
         $data = array_map(fn($customer) => [
             'representative' => $customer->getRepresentative(),
@@ -212,27 +189,14 @@ class BookingController extends AbstractController
         return new JsonResponse($data);
     }
 
-    /**
-     * Creates a new customer (POST /api/customers).
-     */
     #[Route('/api/customers', name: 'add_customer', methods: ['POST'])]
-    public function addCustomer(
-        Request $request,
-        EntityManagerInterface $em
-    ): JsonResponse {
+    public function addCustomer(Request $request, EntityManagerInterface $em): JsonResponse
+    {
         try {
             $data = json_decode($request->getContent(), true);
 
-            if (!isset(
-                $data['organisation'],
-                $data['representative'],
-                $data['phone'],
-                $data['email']
-            )) {
-                return new JsonResponse(
-                    ['error' => 'Invalid input data.'],
-                    400
-                );
+            if (!isset($data['organisation'], $data['representative'], $data['phone'], $data['email'])) {
+                return new JsonResponse(['error' => 'Invalid input data.'], 400);
             }
 
             $customer = new \App\Entity\BookingCustomer();
@@ -241,23 +205,18 @@ class BookingController extends AbstractController
             $customer->setPhone($data['phone']);
             $customer->setEmail($data['email']);
 
+            $type = $data['type'] ?? 'individual';
+            $customer->setType($type);
+
             $em->persist($customer);
             $em->flush();
 
             return new JsonResponse(['status' => 'Customer added successfully']);
         } catch (\Exception $e) {
-            return new JsonResponse(
-                ['error' => 'Internal Server Error: ' . $e->getMessage()],
-                500
-            );
+            return new JsonResponse(['error' => 'Internal Server Error: ' . $e->getMessage()], 500);
         }
     }
 
-    /**
-     * Generates dates for daily/weekly/monthly/yearly recurrences,
-     * or single date if 'none'.
-     * Now uses $count instead of a fixed "5."
-     */
     private function generateDates(\DateTime $startDate, string $recurring, int $count): array
     {
         $dates = [];
@@ -299,12 +258,8 @@ class BookingController extends AbstractController
     #[Route('/api/bookings/{id}', name: 'api_booking_update', methods: ['PUT'])]
     public function updateBooking(Request $request, Booking $booking, EntityManagerInterface $em): JsonResponse
     {
-        // parse JSON
         $data = json_decode($request->getContent(), true);
-
-        // You could update fields if desired, e.g.:
-        // $booking->setDate(new \DateTime($data['date'] ?? 'now'));
-
+        // optionally update fields here...
         $em->flush();
 
         return new JsonResponse(['message' => 'Booking updated'], 200);

@@ -39,6 +39,9 @@ document.addEventListener('DOMContentLoaded', () => {
     const recurrenceCountGroup = document.getElementById('recurrenceCountGroup');
     const recurrenceCountInput = document.getElementById('recurrenceCount');
 
+    // ADDED: reference the new select for customer type
+    const customerTypeSelect = document.getElementById('customerType');
+
     // Helper function
     const checkElement = (element, name) => {
         if (!element) {
@@ -147,6 +150,9 @@ document.addEventListener('DOMContentLoaded', () => {
             const phone = document.getElementById('phone').value.trim();
             const email = document.getElementById('email').value.trim();
 
+            // ADDED: read the new "customerType" field from the select
+            const customerType = customerTypeSelect.value;
+
             if (!organisation || !representative || !phone || !email) {
                 alert("Please fill all fields for new customer.");
                 return;
@@ -156,7 +162,15 @@ document.addEventListener('DOMContentLoaded', () => {
                 const resp = await fetch('/api/customers', {
                     method: 'POST',
                     headers: { 'Content-Type': 'application/json' },
-                    body: JSON.stringify({ organisation, representative, phone, email }),
+                    body: JSON.stringify({
+                        organisation,
+                        representative,
+                        phone,
+                        email,
+
+                        // ADDED: pass the "type" to the server
+                        type: customerType
+                    }),
                 });
                 if (!resp.ok) {
                     const t = await resp.text();
@@ -166,6 +180,7 @@ document.addEventListener('DOMContentLoaded', () => {
                 const result = await resp.json();
                 console.log('Customer added:', result);
 
+                // Add new option to the dropdown
                 const opt = document.createElement('option');
                 opt.value = representative;
                 opt.textContent = `${representative} (${organisation})`;

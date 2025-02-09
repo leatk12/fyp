@@ -13,7 +13,7 @@ class Room
     private ?int $id = null;
 
     #[ORM\Column(length: 255)]
-    private ?string $roomName = null; // Changed from "room_name" to "roomName"
+    private ?string $roomName = null;
 
     #[ORM\Column]
     private ?int $costIndividual = null;
@@ -43,7 +43,6 @@ class Room
     public function setRoomName(string $roomName): static
     {
         $this->roomName = $roomName;
-
         return $this;
     }
 
@@ -55,7 +54,6 @@ class Room
     public function setCostIndividual(int $costIndividual): static
     {
         $this->costIndividual = $costIndividual;
-
         return $this;
     }
 
@@ -67,7 +65,6 @@ class Room
     public function setCostPrivate(int $costPrivate): static
     {
         $this->costPrivate = $costPrivate;
-
         return $this;
     }
 
@@ -79,7 +76,6 @@ class Room
     public function setCostCommunity(int $costCommunity): static
     {
         $this->costCommunity = $costCommunity;
-
         return $this;
     }
 
@@ -91,7 +87,6 @@ class Room
     public function setMaxOccupancy(int $maxOccupancy): static
     {
         $this->maxOccupancy = $maxOccupancy;
-
         return $this;
     }
 
@@ -103,7 +98,21 @@ class Room
     public function setOrganisation(string $organisation): static
     {
         $this->organisation = $organisation;
-
         return $this;
+    }
+
+    /**
+     * Returns the correct cost field for the given customer type.
+     */
+    public function getCostForType(?string $customerType): ?int
+    {
+        $type = strtolower($customerType ?? 'individual');
+
+        return match ($type) {
+            'individual' => $this->costIndividual,
+            'private'    => $this->costPrivate,
+            'community'  => $this->costCommunity,
+            default      => $this->costIndividual, // or throw new \Exception("Unknown type")
+        };
     }
 }
