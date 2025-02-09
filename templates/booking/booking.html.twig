@@ -104,6 +104,7 @@
                         <button type="button" class="btn btn-sm btn-primary" id="addCustomerAjax">Add</button>
                     </div>
 
+                    <!-- Recurring Dropdown -->
                     <div class="mb-3">
                         <label for="recurring" class="form-label">Recurring:</label>
                         <select id="recurring" class="form-select">
@@ -114,6 +115,23 @@
                             <option value="yearly">Yearly</option>
                         </select>
                     </div>
+
+                    <!-- ADDED: Number of Occurrences Field -->
+                    <div class="mb-3" id="recurrenceCountGroup" style="display: none;">
+                        <label for="recurrenceCount" class="form-label">Number of Occurrences:</label>
+                        <input
+                                type="number"
+                                id="recurrenceCount"
+                                class="form-control"
+                                min="1"
+                                max="52"
+                                value="5"
+                        >
+                        <small class="text-muted">
+                            Define how many times the selected recurrence repeats.
+                        </small>
+                    </div>
+                    <!-- END ADDED -->
                 </div>
                 <div class="modal-footer">
                     <button type="submit" class="btn btn-primary">Save Booking</button>

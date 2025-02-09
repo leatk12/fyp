@@ -1,7 +1,6 @@
 // booking.js
 document.addEventListener('DOMContentLoaded', () => {
 
-
     const bookingModalElement = document.getElementById('bookingModal');
     const bookingModalInstance = new bootstrap.Modal(bookingModalElement);
 
@@ -17,16 +16,12 @@ document.addEventListener('DOMContentLoaded', () => {
     const existingCustomerDropdown = document.getElementById('existingCustomer');
     const addCustomerAjaxButton = document.getElementById('addCustomerAjax');
 
-    // Elements for editing an existing booking (SECOND modal)
+    // For editing existing booking
     const editBookingForm = document.getElementById('editBookingForm');
     const cancelEditBookingButton = document.getElementById('cancelEditBooking');
     const updateBookingBtn = document.getElementById('updateBookingBtn');
     const deleteBookingBtn = document.getElementById('deleteBookingBtn');
-
-    // Hidden input for booking ID
     const editBookingIdInput = document.getElementById('editBookingId');
-
-    // Fields for editing booking
     const editBookingRoom = document.getElementById('editBookingRoom');
     const editBookingStart = document.getElementById('editBookingStart');
     const editBookingEnd = document.getElementById('editBookingEnd');
@@ -36,36 +31,42 @@ document.addEventListener('DOMContentLoaded', () => {
     const editPhone = document.getElementById('editPhone');
     const editEmail = document.getElementById('editEmail');
 
-    let isAddingNewCustomer = false; // Track if a new customer is being added
-
-    // For storing bookings in memory
+    let isAddingNewCustomer = false;
     let currentBookings = [];
 
-    // Helper to check for element existence
-    const checkElement = (element, elementName) => {
+    // Recurrence controls
+    const recurringSelect = document.getElementById('recurring');
+    const recurrenceCountGroup = document.getElementById('recurrenceCountGroup');
+    const recurrenceCountInput = document.getElementById('recurrenceCount');
+
+    // Helper function
+    const checkElement = (element, name) => {
         if (!element) {
-            console.error(`${elementName} not found in the DOM.`);
+            console.error(`Missing element: ${name}`);
             return false;
         }
         return true;
     };
 
-    // Grab the page date from URL
+    // Grab ?date= from URL
     const urlParams = new URLSearchParams(window.location.search);
     const pageDate = urlParams.get('date');
 
+    // ---------------------------------------
     // Load Bookings
+    // ---------------------------------------
     const loadBookings = async () => {
         try {
             const response = await fetch('/api/bookings');
-            if (!response.ok) throw new Error(`HTTP error! Status: ${response.status}`);
-
+            if (!response.ok) throw new Error(`HTTP status: ${response.status}`);
             const allBookings = await response.json();
-            // Filter if date is set
+
+            // If ?date= is set, filter
             currentBookings = pageDate
                 ? allBookings.filter(b => b.date === pageDate)
                 : allBookings;
 
+            // Display them in the grid
             currentBookings.forEach(booking => {
                 const startTime = parseInt(booking.time_start.split(':')[0]);
                 const endTime = parseInt(booking.time_end.split(':')[0]);
@@ -90,41 +91,43 @@ document.addEventListener('DOMContentLoaded', () => {
                     firstSlot.style.color = 'white';
                     firstSlot.style.textAlign = 'center';
 
-                    // Attach booking ID for editing
                     firstSlot.dataset.bookingId = booking.id;
-
-                    slots.slice(1).forEach(slot => (slot.style.display = 'none'));
+                    slots.slice(1).forEach(s => (s.style.display = 'none'));
                 }
             });
-        } catch (error) {
-            console.error('Error loading bookings:', error);
+        } catch (err) {
+            console.error('Error loading bookings:', err);
         }
     };
 
+    // ---------------------------------------
     // Load Customers
+    // ---------------------------------------
     const loadCustomers = async () => {
         try {
             const response = await fetch('/api/customers');
-            if (!response.ok) throw new Error(`HTTP error! Status: ${response.status}`);
-
+            if (!response.ok) throw new Error(`HTTP status: ${response.status}`);
             const customers = await response.json();
-            customers.forEach(customer => {
-                const option = document.createElement('option');
-                option.value = customer.representative;
-                option.textContent = `${customer.representative} (${customer.organisation || 'No Organisation'})`;
-                existingCustomerDropdown.appendChild(option);
+
+            customers.forEach(c => {
+                const opt = document.createElement('option');
+                opt.value = c.representative;
+                opt.textContent = `${c.representative} (${c.organisation || 'No Org'})`;
+                existingCustomerDropdown.appendChild(opt);
             });
-        } catch (error) {
-            console.error('Error loading customers:', error);
+        } catch (err) {
+            console.error('Error loading customers:', err);
         }
     };
 
-    // Initialize data
+    // Initialize
     loadBookings();
     loadCustomers();
 
-    // Toggle new customer fields
-    if (checkElement(addNewCustomerButton, "Add New Customer button")) {
+    // ---------------------------------------
+    // Show/hide new customer fields
+    // ---------------------------------------
+    if (checkElement(addNewCustomerButton, "Add New Customer Button")) {
         addNewCustomerButton.addEventListener('click', () => {
             isAddingNewCustomer = !isAddingNewCustomer;
             newCustomerFields.style.display = isAddingNewCustomer ? 'block' : 'none';
@@ -134,95 +137,90 @@ document.addEventListener('DOMContentLoaded', () => {
         });
     }
 
-    // Add new customer via AJAX
-    if (checkElement(addCustomerAjaxButton, "Add Customer Ajax button")) {
+    // ---------------------------------------
+    // Add new customer AJAX
+    // ---------------------------------------
+    if (checkElement(addCustomerAjaxButton, "Add Customer AJAX Button")) {
         addCustomerAjaxButton.addEventListener('click', async () => {
             const organisation = document.getElementById('organisation').value.trim();
             const representative = document.getElementById('representative').value.trim();
             const phone = document.getElementById('phone').value.trim();
             const email = document.getElementById('email').value.trim();
 
-            if (!representative || !phone || !email || !organisation) {
-                alert('Please fill in all fields before adding a new customer.');
+            if (!organisation || !representative || !phone || !email) {
+                alert("Please fill all fields for new customer.");
                 return;
             }
 
             try {
-                const response = await fetch('/api/customers', {
+                const resp = await fetch('/api/customers', {
                     method: 'POST',
-                    body: JSON.stringify({ organisation, representative, phone, email }),
                     headers: { 'Content-Type': 'application/json' },
+                    body: JSON.stringify({ organisation, representative, phone, email }),
                 });
-
-                if (!response.ok) {
-                    const errorText = await response.text();
-                    console.error('Error adding customer:', errorText);
-                    throw new Error('Failed to add new customer. See console for details.');
+                if (!resp.ok) {
+                    const t = await resp.text();
+                    throw new Error(`Add customer failed: ${t}`);
                 }
 
-                const result = await response.json();
-                console.log('New customer added:', result);
+                const result = await resp.json();
+                console.log('Customer added:', result);
 
-                // Add new option
-                const option = document.createElement('option');
-                option.value = representative;
-                option.textContent = `${representative} (${organisation})`;
-                existingCustomerDropdown.appendChild(option);
+                const opt = document.createElement('option');
+                opt.value = representative;
+                opt.textContent = `${representative} (${organisation})`;
+                existingCustomerDropdown.appendChild(opt);
 
                 existingCustomerDropdown.value = representative;
                 newCustomerFields.style.display = 'none';
                 isAddingNewCustomer = false;
 
-                alert('New customer added successfully!');
-            } catch (error) {
-                console.error('Error in addCustomerAjaxButton:', error);
-                alert(error.message);
+                alert("New customer added successfully!");
+            } catch (err) {
+                console.error("Error adding customer:", err);
+                alert(err.message);
             }
         });
     }
 
-    // ----------------------------------------------------------------
-    // DRAG SELECT LOGIC
-    // ----------------------------------------------------------------
+    // ---------------------------------------
+    // Drag select for booking
+    // ---------------------------------------
     let isDragging = false;
     let dragStartTime = null;
     let dragEndTime = null;
     let activeRoomId = null;
     let dragSelectedSlots = [];
 
-    const clearDragHighlights = () => {
-        dragSelectedSlots.forEach(slot => slot.classList.remove('drag-select'));
+    function clearDragHighlights() {
+        dragSelectedSlots.forEach(s => s.classList.remove('drag-select'));
         dragSelectedSlots = [];
-    };
+    }
 
-    if (checkElement(bookingContainer, "Booking container")) {
-        bookingContainer.addEventListener('mousedown', (event) => {
-            if (event.target.classList.contains('booked')) {
-                // It's a booked slot -> skip highlight drag
-                return;
-            }
-            if (event.target.classList.contains('time-slot')) {
+    if (checkElement(bookingContainer, "bookingContainer")) {
+        bookingContainer.addEventListener('mousedown', (ev) => {
+            if (ev.target.classList.contains('booked')) return;
+            if (ev.target.classList.contains('time-slot')) {
                 isDragging = true;
-                dragStartTime = parseInt(event.target.dataset.time, 10);
+                dragStartTime = parseInt(ev.target.dataset.time, 10);
                 dragEndTime = dragStartTime;
-                activeRoomId = event.target.dataset.roomId;
+                activeRoomId = ev.target.dataset.roomId;
 
                 clearDragHighlights();
-                event.target.classList.add('drag-select');
-                dragSelectedSlots.push(event.target);
+                ev.target.classList.add('drag-select');
+                dragSelectedSlots.push(ev.target);
             }
         });
 
-        bookingContainer.addEventListener('mouseover', (event) => {
+        bookingContainer.addEventListener('mouseover', (ev) => {
             if (
                 isDragging &&
-                event.target.classList.contains('time-slot') &&
-                event.target.dataset.roomId === activeRoomId
+                ev.target.classList.contains('time-slot') &&
+                ev.target.dataset.roomId === activeRoomId
             ) {
-                const currentDragTime = parseInt(event.target.dataset.time, 10);
-
-                const minTime = Math.min(dragStartTime, currentDragTime);
-                const maxTime = Math.max(dragStartTime, currentDragTime);
+                const currentTime = parseInt(ev.target.dataset.time, 10);
+                const minTime = Math.min(dragStartTime, currentTime);
+                const maxTime = Math.max(dragStartTime, currentTime);
 
                 clearDragHighlights();
                 for (let t = minTime; t <= maxTime; t++) {
@@ -234,7 +232,7 @@ document.addEventListener('DOMContentLoaded', () => {
                         dragSelectedSlots.push(slot);
                     }
                 }
-                dragEndTime = currentDragTime;
+                dragEndTime = currentTime;
             }
         });
 
@@ -244,60 +242,79 @@ document.addEventListener('DOMContentLoaded', () => {
 
                 const start = Math.min(dragStartTime, dragEndTime);
                 const end = Math.max(dragStartTime, dragEndTime) + 1;
-                const roomId = activeRoomId;
+                openCreateBookingModal(activeRoomId, start, end);
 
                 clearDragHighlights();
-                openCreateBookingModal(roomId, start, end);
-
                 activeRoomId = null;
                 dragStartTime = null;
                 dragEndTime = null;
             }
         });
 
-        // 1) If user clicks a booked slot, open the edit modal
-        bookingContainer.addEventListener('click', async (event) => {
-            if (event.target.classList.contains('booked')) {
-                const bookingId = event.target.dataset.bookingId;
-                if (!bookingId) {
-                    console.error("No booking ID found on this slot.");
-                    return;
-                }
+        // If user clicks a booked slot, open the edit modal
+        bookingContainer.addEventListener('click', async (ev) => {
+            if (ev.target.classList.contains('booked')) {
+                const bookingId = ev.target.dataset.bookingId;
+                if (!bookingId) return;
                 await openEditModal(bookingId);
             }
         });
     }
 
     // ----------------------------------------------------------------
-    // CREATE BOOKING - BOOTSTRAP MODAL
+    // CREATE BOOKING - SHOW/HIDE MODAL
     // ----------------------------------------------------------------
-    const openCreateBookingModal = (roomId, startTime, endTime) => {
-        const roomSlot = document.querySelector(`.time-slot[data-room-id="${roomId}"]`);
-        if (!roomSlot) {
-            console.error("Room element not found for ID:", roomId);
+    function openCreateBookingModal(roomId, startTime, endTime) {
+        const slot = document.querySelector(`.time-slot[data-room-id="${roomId}"]`);
+        if (!slot) {
+            console.error("No slot found for room:", roomId);
             return;
         }
 
-        document.getElementById('bookingRoom').value = roomSlot.dataset.roomName;
+        document.getElementById('bookingRoom').value = slot.dataset.roomName;
         document.getElementById('bookingStart').value = String(startTime).padStart(2, '0') + ':00';
         document.getElementById('bookingEnd').value = String(endTime).padStart(2, '0') + ':00';
-        document.getElementById('bookingDate').value = pageDate || new Date().toISOString().split('T')[0];
+        document.getElementById('bookingDate').value =
+            pageDate || new Date().toISOString().split('T')[0];
 
-        // Show the Bootstrap modal
         bookingModalInstance.show();
-    };
+    }
 
-    const closeCreateBookingModal = () => {
+    function closeCreateBookingModal() {
         bookingModalInstance.hide();
         bookingForm.reset();
         existingCustomerDropdown.value = '';
         newCustomerFields.style.display = 'none';
         isAddingNewCustomer = false;
-    };
+        recurrenceCountGroup.style.display = 'none';
+    }
 
-    // Create booking form submission
-    bookingForm.addEventListener('submit', async (event) => {
-        event.preventDefault();
+    if (checkElement(cancelBookingButton, "Cancel Booking button")) {
+        cancelBookingButton.addEventListener('click', () => {
+            closeCreateBookingModal();
+        });
+    }
+
+    // ----------------------------------------------------------------
+    // SHOW/HIDE the "Number of Occurrences" field
+    // ----------------------------------------------------------------
+    if (recurringSelect) {
+        recurringSelect.addEventListener('change', () => {
+            const val = recurringSelect.value;
+            // If "none," hide the input; otherwise show it
+            if (val === 'none') {
+                recurrenceCountGroup.style.display = 'none';
+            } else {
+                recurrenceCountGroup.style.display = 'block';
+            }
+        });
+    }
+
+    // ----------------------------------------------------------------
+    // CREATE BOOKING - SUBMIT
+    // ----------------------------------------------------------------
+    bookingForm.addEventListener('submit', async (e) => {
+        e.preventDefault();
 
         const bookingDetails = {
             room: document.getElementById('bookingRoom').value,
@@ -307,52 +324,47 @@ document.addEventListener('DOMContentLoaded', () => {
             booked_by: isAddingNewCustomer
                 ? document.getElementById('representative').value
                 : existingCustomerDropdown.value,
-            recurring: (document.getElementById('recurring')?.value || 'none').toLowerCase(),
+            recurring: (recurringSelect?.value || 'none').toLowerCase(),
+
+            // parse the numeric input
+            recurrence_count: parseInt(recurrenceCountInput.value, 10) || 1
         };
 
         try {
             const response = await fetch('/api/bookings', {
                 method: 'POST',
-                body: JSON.stringify(bookingDetails),
                 headers: { 'Content-Type': 'application/json' },
+                body: JSON.stringify(bookingDetails),
             });
 
             if (!response.ok) {
-                const errorText = await response.text();
-                throw new Error('Failed to create booking. ' + errorText);
+                const errText = await response.text();
+                throw new Error(`Failed to create booking. ${errText}`);
             }
 
-            alert('Booking created successfully!');
+            alert("Booking created successfully!");
             closeCreateBookingModal();
-            location.reload(); // Refresh to see new booking
-        } catch (error) {
-            console.error('Error creating booking:', error);
-            alert(`Error: ${error.message}`);
+            location.reload();
+        } catch (err) {
+            console.error("Error creating booking:", err);
+            alert(err.message);
         }
     });
 
-    if (checkElement(cancelBookingButton, "Cancel Booking button")) {
-        cancelBookingButton.addEventListener('click', () => {
-            closeCreateBookingModal();
-        });
-    }
-
     // ----------------------------------------------------------------
-    // EDIT BOOKING - BOOTSTRAP MODAL
+    // EDIT BOOKING
     // ----------------------------------------------------------------
-    const openEditModal = async (bookingId) => {
+    async function openEditModal(bookingId) {
         try {
             let bookingData = currentBookings.find(b => b.id == bookingId);
-
             if (!bookingData) {
-                // fallback: fetch from server
                 const resp = await fetch(`/api/bookings/${bookingId}`);
-                if (!resp.ok) throw new Error(`Could not fetch booking ${bookingId}`);
+                if (!resp.ok) throw new Error("Could not fetch booking details");
                 bookingData = await resp.json();
             }
 
             editBookingIdInput.value = bookingId;
-            editBookingRoom.value = bookingData.room_id; // read-only
+            editBookingRoom.value = bookingData.room_id;
             editBookingStart.value = bookingData.time_start;
             editBookingEnd.value = bookingData.time_end;
             editBookingDate.value = bookingData.date;
@@ -361,28 +373,26 @@ document.addEventListener('DOMContentLoaded', () => {
             editPhone.value = bookingData.phone || '';
             editEmail.value = bookingData.email || '';
 
-            // Show the Bootstrap modal
             editBookingModalInstance.show();
         } catch (err) {
             console.error("Error opening edit modal:", err);
-            alert("Could not load booking details. See console.");
+            alert(err.message);
         }
-    };
+    }
 
-    const closeEditModal = () => {
+    function closeEditModal() {
         editBookingModalInstance.hide();
         editBookingForm.reset();
         editBookingIdInput.value = '';
-    };
+    }
 
-    if (checkElement(cancelEditBookingButton, "Cancel Edit Booking button")) {
+    if (cancelEditBookingButton) {
         cancelEditBookingButton.addEventListener('click', closeEditModal);
     }
 
-    if (checkElement(updateBookingBtn, "Update Booking button")) {
+    if (updateBookingBtn) {
         updateBookingBtn.addEventListener('click', async (e) => {
             e.preventDefault();
-
             const bookingId = editBookingIdInput.value;
             if (!bookingId) {
                 alert("No booking ID found.");
@@ -402,25 +412,25 @@ document.addEventListener('DOMContentLoaded', () => {
 
             try {
                 const resp = await fetch(`/api/bookings/${bookingId}`, {
-                    method: 'PUT', // or PATCH
+                    method: 'PUT',
                     headers: { 'Content-Type': 'application/json' },
                     body: JSON.stringify(payload),
                 });
                 if (!resp.ok) {
-                    const errorText = await resp.text();
-                    throw new Error("Failed to update booking: " + errorText);
+                    const t = await resp.text();
+                    throw new Error(`Failed to update booking: ${t}`);
                 }
                 alert("Booking updated successfully!");
                 closeEditModal();
                 location.reload();
-            } catch (error) {
-                console.error("Update booking error:", error);
-                alert(error.message);
+            } catch (err) {
+                console.error("Update booking error:", err);
+                alert(err.message);
             }
         });
     }
 
-    if (checkElement(deleteBookingBtn, "Delete Booking button")) {
+    if (deleteBookingBtn) {
         deleteBookingBtn.addEventListener('click', async (e) => {
             e.preventDefault();
             const bookingId = editBookingIdInput.value;
@@ -437,15 +447,15 @@ document.addEventListener('DOMContentLoaded', () => {
                     method: 'DELETE',
                 });
                 if (!resp.ok) {
-                    const errorText = await resp.text();
-                    throw new Error("Failed to delete booking: " + errorText);
+                    const t = await resp.text();
+                    throw new Error(`Failed to delete booking: ${t}`);
                 }
                 alert("Booking deleted successfully.");
                 closeEditModal();
                 location.reload();
-            } catch (error) {
-                console.error("Delete booking error:", error);
-                alert(error.message);
+            } catch (err) {
+                console.error("Delete booking error:", err);
+                alert(err.message);
             }
         });
     }

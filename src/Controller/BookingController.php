@@ -75,13 +75,18 @@ class BookingController extends AbstractController
             }
 
             // Parse main booking info
-            $roomName   = $data['room'];
-            $startTime  = new \DateTime($data['time_start']);
-            $endTime    = new \DateTime($data['time_end']);
-            $date       = new \DateTime($data['date']);
-            $recurring  = isset($data['recurring'])
+            $roomName  = $data['room'];
+            $startTime = new \DateTime($data['time_start']);
+            $endTime   = new \DateTime($data['time_end']);
+            $date      = new \DateTime($data['date']);
+            // "none", "daily", "weekly", "monthly", or "yearly"
+            $recurring = isset($data['recurring'])
                 ? strtolower($data['recurring'])
-                : 'none'; // default if not provided
+                : 'none';
+
+            // parse the user-defined number of occurrences (default 1)
+            $recurrenceCount = $data['recurrence_count'] ?? 1;
+            $recurrenceCount = max(1, (int) $recurrenceCount);
 
             // Locate the customer record
             $customer = $customerRepo->findOneBy([
@@ -94,8 +99,8 @@ class BookingController extends AbstractController
                 );
             }
 
-            // Generate all relevant dates based on recurrence
-            $dates = $this->generateDates($date, $recurring);
+            // Generate all relevant dates based on recurrence + count
+            $dates = $this->generateDates($date, $recurring, $recurrenceCount);
 
             // For each date, check conflict and create a booking if no conflict
             foreach ($dates as $bookingDate) {
@@ -123,6 +128,9 @@ class BookingController extends AbstractController
                 $booking->setRoom($roomName);
                 $booking->setBookedBy($customer->getRepresentative());
                 $booking->setCustId($customer->getId());
+
+                // ADDED: store the user-chosen recurrence count
+                $booking->setRecurrenceCount($recurrenceCount);
 
                 $em->persist($booking);
             }
@@ -157,6 +165,8 @@ class BookingController extends AbstractController
                     'time_end'   => $booking->getTimeEnd()->format('H:i'),
                     'room_id'    => $booking->getRoom(),
                     'booked_by'  => $booking->getBookedBy(),
+                    // If you want to see the new column in JSON:
+                    // 'recurrence_count' => $booking->getRecurrenceCount(),
                 ];
             }, $bookings);
 
@@ -246,36 +256,33 @@ class BookingController extends AbstractController
     /**
      * Generates dates for daily/weekly/monthly/yearly recurrences,
      * or single date if 'none'.
+     * Now uses $count instead of a fixed "5."
      */
-    private function generateDates(\DateTime $startDate, string $recurring): array
+    private function generateDates(\DateTime $startDate, string $recurring, int $count): array
     {
         $dates = [];
 
         switch ($recurring) {
             case 'daily':
-                // e.g. 5 consecutive days including the first
-                for ($i = 0; $i < 5; $i++) {
+                for ($i = 0; $i < $count; $i++) {
                     $dates[] = (clone $startDate)->modify("+{$i} day");
                 }
                 break;
 
             case 'weekly':
-                // e.g. 5 weeks total
-                for ($i = 0; $i < 5; $i++) {
+                for ($i = 0; $i < $count; $i++) {
                     $dates[] = (clone $startDate)->modify('+' . ($i * 7) . ' days');
                 }
                 break;
 
             case 'monthly':
-                // e.g. 5 months total
-                for ($i = 0; $i < 5; $i++) {
+                for ($i = 0; $i < $count; $i++) {
                     $dates[] = (clone $startDate)->modify('+' . $i . ' month');
                 }
                 break;
 
             case 'yearly':
-                // e.g. 5 years total
-                for ($i = 0; $i < 5; $i++) {
+                for ($i = 0; $i < $count; $i++) {
                     $dates[] = (clone $startDate)->modify('+' . $i . ' year');
                 }
                 break;
@@ -289,13 +296,14 @@ class BookingController extends AbstractController
         return $dates;
     }
 
-    // src/Controller/BookingController.php
-
     #[Route('/api/bookings/{id}', name: 'api_booking_update', methods: ['PUT'])]
     public function updateBooking(Request $request, Booking $booking, EntityManagerInterface $em): JsonResponse
     {
         // parse JSON
         $data = json_decode($request->getContent(), true);
+
+        // You could update fields if desired, e.g.:
+        // $booking->setDate(new \DateTime($data['date'] ?? 'now'));
 
         $em->flush();
 
@@ -310,5 +318,4 @@ class BookingController extends AbstractController
 
         return new JsonResponse(['message' => 'Booking deleted'], 200);
     }
-
 }

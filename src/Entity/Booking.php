@@ -24,7 +24,7 @@ class Booking
     private ?\DateTimeInterface $time_end = null;
 
     #[ORM\Column(length: 255)]
-    private ?string $room = null; // Changed to store room name
+    private ?string $room = null; // store room name
 
     #[ORM\Column(length: 255)]
     private ?string $booked_by = null;
@@ -32,9 +32,9 @@ class Booking
     #[ORM\Column]
     private ?int $cust_id = null;
 
-//    #[ORM\ManyToOne(targetEntity: Recurrence::class, inversedBy: 'bookings')]
-//    #[ORM\JoinColumn(nullable: true)]
-//    private ?Recurrence $recurring = null;
+    // ADDED: store how many times the recurrence repeats (if applicable).
+    #[ORM\Column(nullable: true)]
+    private ?int $recurrenceCount = null;
 
     public function getId(): ?int
     {
@@ -49,7 +49,6 @@ class Booking
     public function setDate(\DateTimeInterface $date): static
     {
         $this->date = $date;
-
         return $this;
     }
 
@@ -61,7 +60,6 @@ class Booking
     public function setTimeStart(\DateTimeInterface $time_start): static
     {
         $this->time_start = $time_start;
-
         return $this;
     }
 
@@ -73,7 +71,6 @@ class Booking
     public function setTimeEnd(\DateTimeInterface $time_end): static
     {
         $this->time_end = $time_end;
-
         return $this;
     }
 
@@ -85,7 +82,6 @@ class Booking
     public function setRoom(string $room): static
     {
         $this->room = $room;
-
         return $this;
     }
 
@@ -97,7 +93,6 @@ class Booking
     public function setBookedBy(string $booked_by): static
     {
         $this->booked_by = $booked_by;
-
         return $this;
     }
 
@@ -109,19 +104,18 @@ class Booking
     public function setCustId(int $cust_id): static
     {
         $this->cust_id = $cust_id;
-
         return $this;
     }
 
-//    public function getRecurring(): ?Recurrence
-//    {
-//        return $this->recurring;
-//    }
-//
-//    public function setRecurring(?Recurrence $recurring): static
-//    {
-//        $this->recurring = $recurring;
-//
-//        return $this;
-//    }
+    // GET/SET the new column
+    public function getRecurrenceCount(): ?int
+    {
+        return $this->recurrenceCount;
+    }
+
+    public function setRecurrenceCount(?int $recurrenceCount): static
+    {
+        $this->recurrenceCount = $recurrenceCount;
+        return $this;
+    }
 }
