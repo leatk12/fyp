@@ -34,7 +34,6 @@
 
 <!--
   Button that toggles the offcanvas sidebar.
-
 -->
 <button
         class="offcanvas-btn"
@@ -66,9 +65,26 @@
     <div class="offcanvas-body">
         <!-- Put sidebar nav content/links here -->
         <ul class="list-group list-group-flush">
-            <li class="list-group-item"><a href="#">Link 1</a></li>
-            <li class="list-group-item"><a href="#">Link 2</a></li>
-            <li class="list-group-item"><a href="#">Link 3</a></li>
+            <!-- Room Booking Heading -->
+            <li class="list-group-item fw-bold">Room Booking</li>
+            <li class="list-group-item">
+                <a href="{{ path('app_calendar') }}">Calendar</a>
+            </li>
+
+            <!-- Spacing or Divider -->
+            <li class="list-group-item bg-light border-0">&nbsp;</li>
+
+            <!-- Customers Heading -->
+            <li class="list-group-item fw-bold">Customers</li>
+            <li class="list-group-item">
+                <a href="{{ path('app_customer_index') }}">Customers</a>
+            </li>
+            <!-- Add more links as desired, e.g. new customer -->
+            {#
+            <li class="list-group-item">
+                <a href="{{ path('app_customer_new') }}">Add Customer</a>
+            </li>
+            #}
         </ul>
     </div>
 </div>
