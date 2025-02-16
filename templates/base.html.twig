@@ -8,14 +8,75 @@
     {% block stylesheets %}
         <!-- Bootstrap CSS -->
         <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/css/bootstrap.min.css" />
-
         <!-- FullCalendar CSS -->
         <link href="https://cdn.jsdelivr.net/npm/@fullcalendar/core@6.1.6/main.min.css" rel="stylesheet" />
         <link href="https://cdn.jsdelivr.net/npm/@fullcalendar/daygrid@6.1.6/main.min.css" rel="stylesheet" />
+
+        <!-- main app CSS -->
+        {{ encore_entry_link_tags('app') }}
     {% endblock %}
 </head>
 <body>
-{% block body %}{% endblock %}
+<!-- Top Navbar -->
+<nav class="navbar navbar-expand-lg navbar-light bg-light">
+    <div class="container-fluid">
+        <a class="navbar-brand" href="#">Your Brand</a>
+        <div class="collapse navbar-collapse">
+            <ul class="navbar-nav me-auto mb-2 mb-lg-0">
+                <!-- Add other navigation items here -->
+            </ul>
+            {% if app.user %}
+                <a href="{{ path('app_logout') }}" class="btn btn-danger">Logout</a>
+            {% endif %}
+        </div>
+    </div>
+</nav>
+
+<!--
+  Button that toggles the offcanvas sidebar.
+
+-->
+<button
+        class="offcanvas-btn"
+        type="button"
+        data-bs-toggle="offcanvas"
+        data-bs-target="#sidebarOffcanvas"
+        aria-controls="sidebarOffcanvas"
+>
+    <span class="vertical-menu-text">Menu</span>
+</button>
+
+
+<!-- Bootstrap Offcanvas Sidebar -->
+<div
+        class="offcanvas offcanvas-start"
+        tabindex="-1"
+        id="sidebarOffcanvas"
+        aria-labelledby="sidebarOffcanvasLabel"
+>
+    <div class="offcanvas-header">
+        <h5 class="offcanvas-title" id="sidebarOffcanvasLabel">Menu</h5>
+        <button
+                type="button"
+                class="btn-close text-reset"
+                data-bs-dismiss="offcanvas"
+                aria-label="Close"
+        ></button>
+    </div>
+    <div class="offcanvas-body">
+        <!-- Put sidebar nav content/links here -->
+        <ul class="list-group list-group-flush">
+            <li class="list-group-item"><a href="#">Link 1</a></li>
+            <li class="list-group-item"><a href="#">Link 2</a></li>
+            <li class="list-group-item"><a href="#">Link 3</a></li>
+        </ul>
+    </div>
+</div>
+
+<!-- Main content container (optional) -->
+<div class="container mt-4">
+    {% block body %}{% endblock %}
+</div>
 
 {% block javascripts %}
     <!-- Bootstrap JavaScript Bundle (includes Popper) -->

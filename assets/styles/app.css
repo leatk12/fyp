@@ -1,6 +1,57 @@
 body {
-    background-color: lightgray;
+    background-color: white;
 }
+
+/* Positioning & shape for the “tab” button */
+.offcanvas-btn {
+    position: fixed;
+    top: 50%;
+    left: 0;
+    transform: translateY(-50%);
+
+    /* Tab dimensions */
+    width: 60px;               /* Adjust as desired */
+    height: 140px;             /* Adjust as desired */
+
+    /* Colors & shape */
+    background-color: #333;    /* Dark gray background */
+    color: #fff;               /* White text */
+    border: none;
+
+    /* Round the right side to mimic a tab sticking out of a folder */
+    border-top-right-radius: 10px;
+    border-bottom-right-radius: 10px;
+
+    /* Center the text inside vertically & horizontally */
+    display: flex;
+    align-items: center;
+    justify-content: center;
+
+    /* No underlines, etc. if you used <a> or want a consistent look */
+    text-decoration: none;
+    cursor: pointer;
+    /* Optional box shadow for a little “pop”: */
+    box-shadow: 0 2px 6px rgba(0,0,0,0.2);
+}
+
+/* Hover effect so users know it’s interactive */
+.offcanvas-btn:hover {
+    background-color: #555;
+}
+
+/* Vertical text for “Menu” */
+.vertical-menu-text {
+    writing-mode: vertical-rl;
+    text-orientation: mixed;
+    font-weight: bold;
+    font-size: 1rem;   /* Adjust as desired */
+    letter-spacing: 1px;
+    /* Add padding or margin if you like */
+    padding: 0.5rem 0;
+}
+
+
+
 
 /* Basic slot styling */
 .time-slot {
@@ -18,3 +69,6 @@ body {
     text-align: center;
     vertical-align: middle;
 }
+
+
+
