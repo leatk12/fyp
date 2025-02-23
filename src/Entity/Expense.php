@@ -5,6 +5,7 @@ namespace App\Entity;
 use App\Repository\ExpenseRepository;
 use Doctrine\DBAL\Types\Types;
 use Doctrine\ORM\Mapping as ORM;
+use Symfony\Component\Uid\Uuid;
 
 #[ORM\Entity(repositoryClass: ExpenseRepository::class)]
 class Expense
@@ -30,6 +31,35 @@ class Expense
     #[ORM\ManyToOne]
     private ?Account $account_id = null;
 
+    #[ORM\ManyToOne(targetEntity: Transaction::class, inversedBy: 'expenses')]
+    #[ORM\JoinColumn(nullable: false)]
+    private ?Transaction $transaction = null;
+
+    #[ORM\Column(type: 'uuid', nullable: true)]
+    private ?Uuid $draftUuid = null;
+
+    public function getDraftUuid(): ?Uuid
+    {
+        return $this->draftUuid;
+    }
+
+    public function setDraftUuid(?Uuid $uuid): static
+    {
+        $this->draftUuid = $uuid;
+        return $this;
+    }
+
+    public function getTransaction(): ?Transaction
+    {
+        return $this->transaction;
+    }
+
+    public function setTransaction(?Transaction $transaction): static
+    {
+        $this->transaction = $transaction;
+        return $this;
+    }
+
     public function getId(): ?int
     {
         return $this->id;
@@ -43,7 +73,6 @@ class Expense
     public function setSupplierId(?Supplier $supplier_id): static
     {
         $this->supplier_id = $supplier_id;
-
         return $this;
     }
 
@@ -55,7 +84,6 @@ class Expense
     public function setDateIncurred(\DateTimeInterface $dateIncurred): static
     {
         $this->dateIncurred = $dateIncurred;
-
         return $this;
     }
 
@@ -67,7 +95,6 @@ class Expense
     public function setDescription(?string $description): static
     {
         $this->description = $description;
-
         return $this;
     }
 
@@ -79,7 +106,6 @@ class Expense
     public function setAmount(?float $amount): static
     {
         $this->amount = $amount;
-
         return $this;
     }
 
@@ -91,7 +117,6 @@ class Expense
     public function setAccountId(?Account $account_id): static
     {
         $this->account_id = $account_id;
-
         return $this;
     }
 }

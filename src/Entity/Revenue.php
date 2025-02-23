@@ -5,6 +5,7 @@ namespace App\Entity;
 use App\Repository\RevenueRepository;
 use Doctrine\DBAL\Types\Types;
 use Doctrine\ORM\Mapping as ORM;
+use Symfony\Component\Uid\Uuid;
 
 #[ORM\Entity(repositoryClass: RevenueRepository::class)]
 class Revenue
@@ -26,6 +27,20 @@ class Revenue
     #[ORM\Column(length: 1026, nullable: true)]
     private ?string $actual_constraints = null;
 
+
+    #[ORM\Column(type: 'uuid', unique: false, nullable: true)]
+    private ?Uuid $draftUuid = null;
+
+    public function getDraftUuid(): ?Uuid
+    {
+        return $this->draftUuid;
+    }
+
+    public function setdraftUuid(?Uuid $uuid): static
+    {
+        $this->draftUuid = $uuid;
+        return $this;
+    }
     public function getId(): ?int
     {
         return $this->id;

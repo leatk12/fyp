@@ -3,6 +3,7 @@ namespace App\Entity;
 
 use App\Repository\RoomRepository;
 use Doctrine\ORM\Mapping as ORM;
+use Symfony\Component\Uid\Uuid;
 
 #[ORM\Entity(repositoryClass: RoomRepository::class)]
 class Room
@@ -29,6 +30,8 @@ class Room
 
     #[ORM\Column(length: 255)]
     private ?string $organisation = null;
+
+
 
     public function getId(): ?int
     {

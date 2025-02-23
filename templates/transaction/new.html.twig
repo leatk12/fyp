@@ -1,0 +1,70 @@
+{% extends 'base.html.twig' %}
+
+{% block title %}New Transaction{% endblock %}
+
+{% block body %}
+    <h1>Create Transaction</h1>
+
+    {% if app.session.flashBag.has('error') %}
+        <div class="alert alert-danger">
+            {{ app.session.flashBag.get('error')|join(',') }}
+        </div>
+    {% endif %}
+
+    {{ form_start(form) }}
+    {# 1) top-level choice: EXPENSE or REVENUE #}
+    {{ form_row(form.isExpenseOrRevenue) }}
+
+    {# 2) the user’s category choice #}
+    {{ form_row(form.category) }}
+
+    {{ form_row(form.date) }}
+    {{ form_row(form.description) }}
+    {# Amount gets auto-updated by lines #}
+    {{ form_row(form.amount) }}
+
+    {# The button is toggled by JavaScript #}
+    <button type="button"
+            class="btn btn-outline-primary"
+            id="addLinesBtn"
+            style="display: none;"
+    >
+        Add Expense
+    </button>
+
+    {{ form_row(form.save) }}
+    {{ form_end(form) }}
+
+    <!-- The modal for lines -->
+    <div class="modal fade" id="linesModal" tabindex="-1" aria-hidden="true">
+        <div class="modal-dialog modal-lg">
+            <div class="modal-content">
+                <div class="modal-header">
+                    <h5 class="modal-title">Add Line Items</h5>
+                    <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
+                </div>
+                <div class="modal-body">
+                    <div id="linesContainer"></div>
+                    <button type="button" class="btn btn-sm btn-secondary" id="addLineBtn">
+                        + Add Another Expense
+                    </button>
+                </div>
+                <div class="modal-footer">
+                    <button type="button" class="btn btn-primary" data-bs-dismiss="modal">
+                        Done
+                    </button>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- Pass the global variables to JavaScript -->
+    <script>
+        window.createExpenseUrl = "{{ path('api_create_expense') }}";
+        window.createRevenueUrl = "{{ path('api_create_revenue') }}";
+        window.draftUuid = "{{ draftUuid }}";
+    </script>
+
+
+    <script src="{{ asset('build/app.js') }}"></script>
+{% endblock %}

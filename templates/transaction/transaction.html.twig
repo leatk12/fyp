@@ -1,0 +1,54 @@
+{% extends 'base.html.twig' %}
+
+{% block title %}Transactions{% endblock %}
+
+{% block body %}
+    <h1>Transactions</h1>
+
+    {% if app.session.flashBag.has('success') %}
+        <div class="alert alert-success">
+            {{ app.session.flashBag.get('success')|join(',') }}
+        </div>
+    {% endif %}
+
+    <table class="table table-striped">
+        <thead>
+        <tr>
+            <th>ID</th>
+            <th>Date</th>
+            <th>Type</th>
+            <th>Description</th>
+            <th>Amount</th>
+            <th>Actions</th>
+        </tr>
+        </thead>
+        <tbody>
+        {% for tx in transactions %}
+            <tr>
+                <td>{{ tx.id }}</td>
+                <td>{{ tx.date|date('Y-m-d') }}</td>
+                <td>{{ tx.type }}</td>
+                <td>{{ tx.description }}</td>
+                <td>{{ tx.amount }}</td>
+                <td>
+                    <a href="{{ path('app_transaction_edit', {id: tx.id}) }}"
+                       class="btn btn-sm btn-secondary">Edit</a>
+                    <form action="{{ path('app_transaction_delete', {id: tx.id}) }}"
+                          method="POST"
+                          style="display:inline;"
+                    >
+                        <button type="submit" class="btn btn-sm btn-danger"
+                                onclick="return confirm('Delete this transaction?');">
+                            Delete
+                        </button>
+                    </form>
+                </td>
+            </tr>
+        {% endfor %}
+        </tbody>
+    </table>
+
+    <p>
+        <a href="{{ path('app_transaction_new') }}" class="btn btn-primary">Create New Transaction</a>
+    </p>
+{% endblock %}

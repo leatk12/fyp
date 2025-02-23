@@ -5,6 +5,10 @@ namespace App\Entity;
 use App\Repository\TransactionRepository;
 use Doctrine\DBAL\Types\Types;
 use Doctrine\ORM\Mapping as ORM;
+use Doctrine\Common\Collections\Collection;
+use Doctrine\Common\Collections\ArrayCollection;
+use Symfony\Component\Uid\Uuid;
+use Symfony\Component\Validator\Constraints as Assert;
 
 #[ORM\Entity(repositoryClass: TransactionRepository::class)]
 class Transaction
@@ -15,17 +19,105 @@ class Transaction
     private ?int $id = null;
 
     #[ORM\Column(type: Types::DATETIME_MUTABLE)]
+    #[Assert\NotNull(message: "Date cannot be null")]
     private ?\DateTimeInterface $date = null;
 
     #[ORM\Column(length: 255, nullable: true)]
     private ?string $description = null;
 
     #[ORM\ManyToOne]
-    #[ORM\JoinColumn(nullable: false)]
+    #[ORM\JoinColumn(nullable: true)] // ALLOW NULL if no account is chosen
     private ?Account $account_id = null;
 
     #[ORM\Column(nullable: true)]
+    #[Assert\NotBlank(message: "Amount cannot be blank.")]
+    #[Assert\PositiveOrZero(message: "Amount must be zero or positive.")]
     private ?float $amount = null;
+
+    #[ORM\OneToMany(targetEntity: Expense::class, mappedBy: 'transaction', cascade: ['persist', 'remove'])]
+    private Collection $expenses;
+
+    #[ORM\Column(length: 255)]
+    #[Assert\NotBlank(message: "Type cannot be blank")]
+    private ?string $Type = null;
+
+    #[ORM\Column(type: 'uuid', nullable: true)]
+    private ?Uuid $uuid = null;
+
+    // Represents if it’s an EXPENSE or REVENUE
+    #[ORM\Column(length: 10, nullable: false)]
+    private ?string $isExpenseOrRevenue = null;
+
+    // Category like Rent, Wages, Utilities, etc.
+    #[ORM\Column(length: 255, nullable: false)]
+    private ?string $category = null;
+
+
+    public function getIsExpenseOrRevenue(): ?string
+    {
+        return $this->isExpenseOrRevenue;
+    }
+
+    public function setIsExpenseOrRevenue(?string $value): self
+    {
+        $this->isExpenseOrRevenue = $value;
+        return $this;
+    }
+
+    public function getCategory(): ?string
+    {
+        return $this->category;
+    }
+
+    public function setCategory(?string $cat): self
+    {
+        $this->category = $cat;
+        return $this;
+    }
+
+
+    public function __construct()
+    {
+        $this->expenses = new ArrayCollection();
+    }
+
+    public function getUuid(): ?Uuid
+    {
+        return $this->uuid;
+    }
+
+    public function setUuid(?Uuid $uuid): static
+    {
+        $this->uuid = $uuid;
+        return $this;
+    }
+
+    /**
+     * @return Collection<int, Expense>
+     */
+    public function getExpenses(): Collection
+    {
+        return $this->expenses;
+    }
+
+    public function addExpense(Expense $expense): static
+    {
+        if (!$this->expenses->contains($expense)) {
+            $this->expenses[] = $expense;
+            $expense->setTransaction($this);
+        }
+        return $this;
+    }
+
+    public function removeExpense(Expense $expense): static
+    {
+        if ($this->expenses->removeElement($expense)) {
+            if ($expense->getTransaction() === $this) {
+                $expense->setTransaction(null);
+            }
+        }
+        return $this;
+    }
 
     public function getId(): ?int
     {
@@ -40,7 +132,6 @@ class Transaction
     public function setDate(\DateTimeInterface $date): static
     {
         $this->date = $date;
-
         return $this;
     }
 
@@ -52,7 +143,6 @@ class Transaction
     public function setDescription(?string $description): static
     {
         $this->description = $description;
-
         return $this;
     }
 
@@ -64,7 +154,6 @@ class Transaction
     public function setAccountId(?Account $account_id): static
     {
         $this->account_id = $account_id;
-
         return $this;
     }
 
@@ -76,7 +165,17 @@ class Transaction
     public function setAmount(?float $amount): static
     {
         $this->amount = $amount;
+        return $this;
+    }
 
+    public function getType(): ?string
+    {
+        return $this->Type;
+    }
+
+    public function setType(string $Type): static
+    {
+        $this->Type = $Type;
         return $this;
     }
 }

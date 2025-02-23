@@ -1,0 +1,17 @@
+{% extends 'base.html.twig' %}
+
+{% block title %}Edit Transaction{% endblock %}
+
+{% block body %}
+    <h1>Edit Transaction</h1>
+
+    {{ form_start(form) }}
+        {{ form,_row(form.date) }}
+        {{ form_row(form.description) }}
+        {{ form_row(form.amount) }}
+        {{ form_row(form.type) }}
+        {{ form_row(form.expenses) }}
+
+        {{ form_row(form.save) }}
+    {{ form_end(form) }}
+{% endblock %}

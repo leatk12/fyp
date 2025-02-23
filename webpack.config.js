@@ -22,8 +22,7 @@ Encore
      */
     .addEntry('app', './assets/app.js')
     .addEntry('booking', './assets/booking.js')
-    .setOutputPath('public/build/')
-    .setPublicPath('/build')
+
 
     // When enabled, Webpack "splits" your files into smaller pieces for greater optimization.
     .splitEntryChunks()
