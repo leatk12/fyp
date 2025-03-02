@@ -178,4 +178,6 @@ class Transaction
         $this->Type = $Type;
         return $this;
     }
+
+
 }

@@ -6,11 +6,52 @@
     <h1>Edit Transaction</h1>
 
     {{ form_start(form) }}
-        {{ form_row(form.date) }}
-        {{ form_row(form.description) }}
-        {{ form_row(form.amount) }}
-
-
-        {{ form_row(form.save) }}
+    {{ form_row(form.date) }}
+    {{ form_row(form.description) }}
+    {{ form_row(form.amount) }}
+    {{ form_row(form.save) }}
     {{ form_end(form) }}
+
+    {# Button to open the Add Line modal  #}
+    <button type="button" class="btn btn-outline-primary" id="addLinesBtn">
+        Add Line Item
+    </button>
+
+    {# The modal markup for adding line items  #}
+    <div class="modal fade" id="linesModal" tabindex="-1" aria-hidden="true">
+        <div class="modal-dialog modal-lg">
+            <div class="modal-content">
+                <div class="modal-header">
+                    <h5 class="modal-title">Add Line Items</h5>
+                    <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
+                </div>
+                <div class="modal-body">
+                    <div id="linesContainer"></div>
+                    <button type="button" class="btn btn-sm btn-secondary" id="addLineBtn">
+                        + Add Another Expense
+                    </button>
+                </div>
+                <div class="modal-footer">
+                    <button type="button" class="btn btn-primary" data-bs-dismiss="modal">
+                        Done
+                    </button>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    {# Pass necessary global variables to JavaScript; here we use the transaction’s uuid as the draftUuid  #}
+    <script>
+        window.createExpenseUrl = "{{ path('api_create_expense') }}";
+        window.createRevenueUrl = "{{ path('api_create_revenue') }}";
+        window.draftUuid = "{{ transaction.uuid }}";
+        window.suppliers = {{ suppliers
+        |map(s => { 'id': s.id, 'organisation': s.organisation })
+        |json_encode
+        |raw
+        }};
+    </script>
+
+    <script src="{{ asset('build/app.js') }}"></script>
+    {{ encore_entry_script_tags('transaction') }}
 {% endblock %}

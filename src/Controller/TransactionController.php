@@ -99,14 +99,15 @@ class TransactionController extends AbstractController
         $form = $this->createForm(TransactionType::class, $transaction);
         $form->handleRequest($request);
 
+        // Retrieve suppliers as done in the new() action
+        $allSuppliers = $em->getRepository(\App\Entity\Supplier::class)->findAll();
+
         if ($form->isSubmitted() && $form->isValid()) {
-            // Also ensure 'type' is set if user changed isExpenseOrRevenue
             if ($transaction->getIsExpenseOrRevenue() === 'EXPENSE') {
                 $transaction->setType('Expense');
             } else {
                 $transaction->setType('Revenue');
             }
-
             $em->flush();
             $this->addFlash('success', 'Transaction updated!');
             return $this->redirectToRoute('app_transaction_index');
@@ -115,8 +116,10 @@ class TransactionController extends AbstractController
         return $this->render('transaction/edit.html.twig', [
             'transaction' => $transaction,
             'form' => $form->createView(),
+            'suppliers' => $allSuppliers,
         ]);
     }
+
 
     #[Route('/{id}/delete', name: 'app_transaction_delete', methods: ['POST'])]
     public function delete(Request $request, Transaction $transaction, EntityManagerInterface $em): Response
