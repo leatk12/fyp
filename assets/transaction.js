@@ -74,9 +74,10 @@ document.addEventListener('DOMContentLoaded', () => {
                 opt.textContent = sup.organisation || 'No Organisation';
                 supplierSelect.appendChild(opt);
             });
-
         } else {
             // REVENUE
+            // Use a unique ID for the checkbox to ensure uniqueness if multiple lines are added.
+            const uniqueId = 'spendingConstraints-' + Date.now();
             lineDiv.innerHTML = `
                 <label>Source</label>
                 <input type="text" class="form-control lineSource mb-2" placeholder="Revenue source"/>
@@ -84,8 +85,24 @@ document.addEventListener('DOMContentLoaded', () => {
                 <label>Amount</label>
                 <input type="number" step="0.01" class="form-control lineAmt mb-2" placeholder="Amount"/>
 
+                <div class="form-check mb-2">
+                    <input class="form-check-input lineSpendingConstraints" type="checkbox" value="1" id="${uniqueId}">
+                    <label class="form-check-label" for="${uniqueId}">Spending Constraints</label>
+                </div>
+                <div class="actual-constraints-container mb-2" style="display: none;">
+                    <label>Actual Constraints</label>
+                    <input type="text" class="form-control lineActualConstraints" placeholder="Actual Constraints"/>
+                </div>
+
                 <button type="button" class="btn btn-sm btn-success commitLineBtn">Save this Revenue</button>
             `;
+
+            // Add event listener on the checkbox to toggle the actual constraints field visibility
+            const checkbox = lineDiv.querySelector('.lineSpendingConstraints');
+            const actualContainer = lineDiv.querySelector('.actual-constraints-container');
+            checkbox.addEventListener('change', function() {
+                actualContainer.style.display = this.checked ? 'block' : 'none';
+            });
         }
 
         linesContainer.appendChild(lineDiv);
@@ -97,14 +114,13 @@ document.addEventListener('DOMContentLoaded', () => {
 
         const parent = event.target.closest('div');
         const val = isExpRevField.value; // "EXPENSE" or "REVENUE"
-
         let amtVal = 0;
 
         if (val === 'EXPENSE') {
             // Gather data including supplier
             const supplierId = parent.querySelector('.lineSupplier')?.value || null;
-            const desc = parent.querySelector('.lineDesc').value || '';
-            amtVal = parseFloat(parent.querySelector('.lineAmt').value || '0');
+            const desc = parent.querySelector('.lineDesc')?.value || '';
+            amtVal = parseFloat(parent.querySelector('.lineAmt')?.value || '0');
 
             const payload = {
                 draftUuid: draftUuid,
@@ -112,6 +128,7 @@ document.addEventListener('DOMContentLoaded', () => {
                 description: desc,
                 amount: amtVal
             };
+
             try {
                 const resp = await fetch(expenseUrl, {
                     method: 'POST',
@@ -128,17 +145,24 @@ document.addEventListener('DOMContentLoaded', () => {
                 console.error(e);
                 alert('Failed to create expense line.');
             }
-
         } else if (val === 'REVENUE') {
             // Gather data for revenue
-            const source = parent.querySelector('.lineSource').value || '';
-            amtVal = parseFloat(parent.querySelector('.lineAmt').value || '0');
+            const source = parent.querySelector('.lineSource')?.value || '';
+            amtVal = parseFloat(parent.querySelector('.lineAmt')?.value || '0');
+            const spendingConstraints = parent.querySelector('.lineSpendingConstraints')?.checked || false;
+            let actualConstraints = '';
+            if (spendingConstraints) {
+                actualConstraints = parent.querySelector('.lineActualConstraints')?.value || '';
+            }
 
             const payload = {
                 draftUuid: draftUuid,
                 source: source,
-                amount: amtVal
+                amount: amtVal,
+                spending_constraints: spendingConstraints,
+                actual_constraints: actualConstraints
             };
+
             try {
                 const resp = await fetch(revenueUrl, {
                     method: 'POST',

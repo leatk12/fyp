@@ -69,6 +69,13 @@ class ExpRevController extends AbstractController
         $revenue->setSource($data['source'] ?? 'Unknown');
         $revenue->setAmount($data['amount'] ?? 0);
 
+        // Set spending constraints (default false)
+        $revenue->setSpendingConstraints(isset($data['spending_constraints']) ? (bool)$data['spending_constraints'] : false);
+        // Set actual constraints if provided
+        if (isset($data['actual_constraints'])) {
+            $revenue->setActualConstraints($data['actual_constraints']);
+        }
+
         $em->persist($revenue);
         $em->flush();
 
@@ -77,4 +84,5 @@ class ExpRevController extends AbstractController
             'id' => $revenue->getId(),
         ]);
     }
+
 }

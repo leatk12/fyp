@@ -20,9 +20,9 @@ final class Version20250302181601 extends AbstractMigration
     public function up(Schema $schema): void
     {
         // this up() migration is auto-generated, please modify it to your needs
-        $this->addSql('ALTER TABLE revenue ADD customer_id INT NOT NULL');
-        $this->addSql('ALTER TABLE revenue ADD CONSTRAINT FK_E9116C859395C3F3 FOREIGN KEY (customer_id) REFERENCES customer (id)');
-        $this->addSql('CREATE INDEX IDX_E9116C859395C3F3 ON revenue (customer_id)');
+        //$this->addSql('ALTER TABLE revenue ADD customer_id INT NOT NULL');
+       // $this->addSql('ALTER TABLE revenue ADD CONSTRAINT FK_E9116C859395C3F3 FOREIGN KEY (customer_id) REFERENCES customer (id)');
+       // $this->addSql('CREATE INDEX IDX_E9116C859395C3F3 ON revenue (customer_id)');
     }
 
     public function down(Schema $schema): void

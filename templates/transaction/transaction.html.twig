@@ -24,24 +24,83 @@
         </thead>
         <tbody>
         {% for tx in transactions %}
-            <tr>
+            <tr class="transaction-row" data-tx-id="{{ tx.id }}" style="cursor:pointer;">
                 <td>{{ tx.id }}</td>
                 <td>{{ tx.date|date('Y-m-d') }}</td>
                 <td>{{ tx.type }}</td>
                 <td>{{ tx.description }}</td>
                 <td>{{ tx.amount }}</td>
                 <td>
-                    <a href="{{ path('app_transaction_edit', {id: tx.id}) }}"
-                       class="btn btn-sm btn-secondary">Edit</a>
-                    <form action="{{ path('app_transaction_delete', {id: tx.id}) }}"
-                          method="POST"
-                          style="display:inline;"
-                    >
+                    <a href="{{ path('app_transaction_edit', {id: tx.id}) }}" class="btn btn-sm btn-secondary">Edit</a>
+                    <form action="{{ path('app_transaction_delete', {id: tx.id}) }}" method="POST" style="display:inline;">
                         <button type="submit" class="btn btn-sm btn-danger"
                                 onclick="return confirm('Delete this transaction?');">
                             Delete
                         </button>
                     </form>
+                </td>
+            </tr>
+            <tr class="details-row" id="details-{{ tx.id }}" style="display: none;">
+                <td colspan="6">
+                    {% if tx.isExpenseOrRevenue == 'EXPENSE' %}
+                        <h5>Expenses</h5>
+                        <table class="table table-sm table-bordered">
+                            <thead>
+                            <tr>
+                                <th>Expense ID</th>
+                                <th>Supplier</th>
+                                <th>Date Incurred</th>
+                                <th>Description</th>
+                                <th>Amount</th>
+                            </tr>
+                            </thead>
+                            <tbody>
+                            {% for expense in tx.expenses %}
+                                <tr>
+                                    <td>{{ expense.id }}</td>
+                                    <td>{{ expense.supplierId.organisation }}</td>
+                                    <td>{{ expense.dateIncurred ? expense.dateIncurred|date('Y-m-d') : '' }}</td>
+                                    <td>{{ expense.description }}</td>
+                                    <td>{{ expense.amount }}</td>
+                                </tr>
+                            {% else %}
+                                <tr>
+                                    <td colspan="5">No expenses</td>
+                                </tr>
+                            {% endfor %}
+                            </tbody>
+                        </table>
+                    {% elseif tx.isExpenseOrRevenue == 'REVENUE' %}
+                        <h5>Revenues</h5>
+                        <table class="table table-sm table-bordered">
+                            <thead>
+                            <tr>
+                                <th>Revenue ID</th>
+                                <th>Source</th>
+                                <th>Amount</th>
+                                <th>Spending Constraints</th>
+                                <th>Actual Constraints</th>
+                            </tr>
+                            </thead>
+                            <tbody>
+                            {% for revenue in tx.revenues %}
+                                <tr>
+                                    <td>{{ revenue.id }}</td>
+                                    <td>{{ revenue.source }}</td>
+                                    <td>{{ revenue.amount }}</td>
+                                    <td>{{ revenue.spendingConstraints ? 'Yes' : 'No' }}</td>
+                                    <td>{{ revenue.actualConstraints }}</td>
+                                </tr>
+                            {% else %}
+                                <tr>
+                                    <td colspan="5">No revenue items</td>
+                                </tr>
+                            {% endfor %}
+                            </tbody>
+                        </table>
+                    {% else %}
+                        <p>No details available.</p>
+                    {% endif %}
                 </td>
             </tr>
         {% endfor %}
@@ -51,4 +110,22 @@
     <p>
         <a href="{{ path('app_transaction_new') }}" class="btn btn-primary">Create New Transaction</a>
     </p>
+
+    {# JavaScript to toggle the details row when a transaction row is clicked #}
+    <script>
+        document.addEventListener('DOMContentLoaded', function() {
+            const transactionRows = document.querySelectorAll('.transaction-row');
+            transactionRows.forEach(row => {
+                row.addEventListener('click', function() {
+                    const txId = this.dataset.txId;
+                    const detailsRow = document.getElementById('details-' + txId);
+                    if (detailsRow.style.display === 'none' || detailsRow.style.display === '') {
+                        detailsRow.style.display = 'table-row';
+                    } else {
+                        detailsRow.style.display = 'none';
+                    }
+                });
+            });
+        });
+    </script>
 {% endblock %}

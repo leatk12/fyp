@@ -75,6 +75,7 @@ class TransactionController extends AbstractController
                     ->findBy(['draftUuid' => $draftUuid]);
                 foreach ($revenues as $rev) {
                     $rev->setDraftUuid(null);
+                    $transaction->addRevenue($rev);
                 }
             }
 

@@ -9,6 +9,8 @@ use Doctrine\Common\Collections\Collection;
 use Doctrine\Common\Collections\ArrayCollection;
 use Symfony\Component\Uid\Uuid;
 use Symfony\Component\Validator\Constraints as Assert;
+use App\Entity\Expense;
+use App\Entity\Revenue;
 
 #[ORM\Entity(repositoryClass: TransactionRepository::class)]
 class Transaction
@@ -26,7 +28,7 @@ class Transaction
     private ?string $description = null;
 
     #[ORM\ManyToOne]
-    #[ORM\JoinColumn(nullable: true)] // ALLOW NULL if no account is chosen
+    #[ORM\JoinColumn(nullable: true)]
     private ?Account $account_id = null;
 
     #[ORM\Column(nullable: true)]
@@ -37,6 +39,10 @@ class Transaction
     #[ORM\OneToMany(targetEntity: Expense::class, mappedBy: 'transaction', cascade: ['persist', 'remove'])]
     private Collection $expenses;
 
+    // NEW: Add OneToMany for revenues
+    #[ORM\OneToMany(targetEntity: Revenue::class, mappedBy: 'transaction', cascade: ['persist', 'remove'])]
+    private Collection $revenues;
+
     #[ORM\Column(length: 255)]
     #[Assert\NotBlank(message: "Type cannot be blank")]
     private ?string $Type = null;
@@ -44,14 +50,17 @@ class Transaction
     #[ORM\Column(type: 'uuid', nullable: true)]
     private ?Uuid $uuid = null;
 
-    // Represents if it’s an EXPENSE or REVENUE
     #[ORM\Column(length: 10, nullable: false)]
     private ?string $isExpenseOrRevenue = null;
 
-    // Category like Rent, Wages, Utilities, etc.
     #[ORM\Column(length: 255, nullable: false)]
     private ?string $category = null;
 
+    public function __construct()
+    {
+        $this->expenses = new ArrayCollection();
+        $this->revenues = new ArrayCollection(); // initialize revenues
+    }
 
     public function getIsExpenseOrRevenue(): ?string
     {
@@ -73,12 +82,6 @@ class Transaction
     {
         $this->category = $cat;
         return $this;
-    }
-
-
-    public function __construct()
-    {
-        $this->expenses = new ArrayCollection();
     }
 
     public function getUuid(): ?Uuid
@@ -114,6 +117,33 @@ class Transaction
         if ($this->expenses->removeElement($expense)) {
             if ($expense->getTransaction() === $this) {
                 $expense->setTransaction(null);
+            }
+        }
+        return $this;
+    }
+
+    /**
+     * @return Collection<int, Revenue>
+     */
+    public function getRevenues(): Collection
+    {
+        return $this->revenues;
+    }
+
+    public function addRevenue(Revenue $revenue): static
+    {
+        if (!$this->revenues->contains($revenue)) {
+            $this->revenues[] = $revenue;
+            $revenue->setTransaction($this);
+        }
+        return $this;
+    }
+
+    public function removeRevenue(Revenue $revenue): static
+    {
+        if ($this->revenues->removeElement($revenue)) {
+            if ($revenue->getTransaction() === $this) {
+                $revenue->setTransaction(null);
             }
         }
         return $this;
@@ -178,6 +208,4 @@ class Transaction
         $this->Type = $Type;
         return $this;
     }
-
-
 }
