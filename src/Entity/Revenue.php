@@ -21,7 +21,7 @@ class Revenue
     #[ORM\Column(type: Types::DECIMAL, precision: 10, scale: 2)]
     private ?string $amount = null;
 
-    #[ORM\Column]
+    #[ORM\Column(nullable: true)]
     private ?bool $spending_constraints = null;
 
     #[ORM\Column(length: 1026, nullable: true)]
