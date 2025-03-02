@@ -4,6 +4,7 @@ namespace App\Controller;
 
 use App\Entity\Expense;
 use App\Entity\Revenue;
+use App\Entity\Supplier; // <-- Added
 use Doctrine\ORM\EntityManagerInterface;
 use Symfony\Component\HttpFoundation\Request;
 use Symfony\Component\HttpFoundation\JsonResponse;
@@ -25,12 +26,23 @@ class ExpRevController extends AbstractController
         }
         $draftUuid = Uuid::fromString($draftUuidString);
 
+        // We need a valid supplierId
+        $supplierId = $data['supplierId'] ?? null;
+        if (!$supplierId) {
+            return new JsonResponse(['error' => 'Missing supplierId'], 400);
+        }
+        $supplier = $em->getRepository(Supplier::class)->find($supplierId);
+        if (!$supplier) {
+            return new JsonResponse(['error' => 'Invalid supplierId'], 400);
+        }
+
         $expense = new Expense();
         $expense->setDraftUuid($draftUuid);
+        $expense->setSupplierId($supplier);
         $expense->setDescription($data['description'] ?? '');
         $expense->setAmount($data['amount'] ?? 0);
 
-        // Optionally set dateIncurred, supplierId, etc. if posted in $data
+        // Optionally set dateIncurred, etc. if posted in $data
 
         $em->persist($expense);
         $em->flush();
@@ -53,7 +65,7 @@ class ExpRevController extends AbstractController
         $draftUuid = Uuid::fromString($draftUuidString);
 
         $revenue = new Revenue();
-        $revenue->setdraftUuid($draftUuid);
+        $revenue->setDraftUuid($draftUuid);
         $revenue->setSource($data['source'] ?? 'Unknown');
         $revenue->setAmount($data['amount'] ?? 0);
 

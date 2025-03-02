@@ -5,6 +5,7 @@ namespace App\Controller;
 use App\Entity\Transaction;
 use App\Entity\Expense;
 use App\Entity\Revenue;
+use App\Entity\Supplier;
 use App\Form\TransactionType;
 use App\Repository\TransactionRepository;
 use Doctrine\ORM\EntityManagerInterface;
@@ -30,11 +31,10 @@ class TransactionController extends AbstractController
     #[Route('/new', name: 'app_transaction_new', methods: ['GET','POST'])]
     public function new(Request $request, EntityManagerInterface $em): Response
     {
-        // 1) Ensure we have a draftUuid in the query param. If not, create one:
+        // 1) Ensure we have a draftUuid in the query param. If not, create one
         $draftUuidString = $request->query->get('draftUuid');
         if (!$draftUuidString) {
             $draftUuid = Uuid::v4();
-            // Redirect with ?draftUuid=... so we can store lines via AJAX
             return $this->redirectToRoute('app_transaction_new', [
                 'draftUuid' => $draftUuid,
             ]);
@@ -51,25 +51,33 @@ class TransactionController extends AbstractController
         $form = $this->createForm(TransactionType::class, $transaction);
         $form->handleRequest($request);
 
+        // 4) Retrieve all possible suppliers so we can pass them to the Twig
+        $allSuppliers = $em->getRepository(Supplier::class)->findAll();
+
         if ($form->isSubmitted() && $form->isValid()) {
-            // 4) Once user finalizes, link any "draft" lines to this transaction
+            // NEW: set the "type" field from isExpenseOrRevenue
+            if ($transaction->getIsExpenseOrRevenue() === 'EXPENSE') {
+                $transaction->setType('Expense'); // never null
+            } else {
+                $transaction->setType('Revenue'); // never null
+            }
+
+            // Link any draft lines to this transaction
             if ($transaction->getIsExpenseOrRevenue() === 'EXPENSE') {
                 $expenses = $em->getRepository(Expense::class)
                     ->findBy(['draftUuid' => $draftUuid]);
                 foreach ($expenses as $exp) {
                     $exp->setTransaction($transaction);
-                    $exp->setDraftUuid(null); // Clear draft so they’re final
+                    $exp->setDraftUuid(null);
                 }
             } elseif ($transaction->getIsExpenseOrRevenue() === 'REVENUE') {
                 $revenues = $em->getRepository(Revenue::class)
                     ->findBy(['draftUuid' => $draftUuid]);
                 foreach ($revenues as $rev) {
-                    // If you want to link revenue lines, do so. For now, just clearing the draft
                     $rev->setDraftUuid(null);
                 }
             }
 
-            // 5) Persist the transaction
             $em->persist($transaction);
             $em->flush();
 
@@ -80,7 +88,8 @@ class TransactionController extends AbstractController
 
         return $this->render('transaction/new.html.twig', [
             'form' => $form->createView(),
-            'draftUuid' => $draftUuid, // Pass to Twig for JS usage
+            'draftUuid' => $draftUuid,
+            'suppliers' => $allSuppliers,
         ]);
     }
 
@@ -91,6 +100,13 @@ class TransactionController extends AbstractController
         $form->handleRequest($request);
 
         if ($form->isSubmitted() && $form->isValid()) {
+            // Also ensure 'type' is set if user changed isExpenseOrRevenue
+            if ($transaction->getIsExpenseOrRevenue() === 'EXPENSE') {
+                $transaction->setType('Expense');
+            } else {
+                $transaction->setType('Revenue');
+            }
+
             $em->flush();
             $this->addFlash('success', 'Transaction updated!');
             return $this->redirectToRoute('app_transaction_index');

@@ -19,7 +19,7 @@ class Expense
     #[ORM\JoinColumn(nullable: false)]
     private ?Supplier $supplier_id = null;
 
-    #[ORM\Column(type: Types::DATETIME_MUTABLE)]
+    #[ORM\Column(type: Types::DATETIME_MUTABLE, nullable: true)]
     private ?\DateTimeInterface $dateIncurred = null;
 
     #[ORM\Column(length: 255, nullable: true)]
@@ -32,7 +32,7 @@ class Expense
     private ?Account $account_id = null;
 
     #[ORM\ManyToOne(targetEntity: Transaction::class, inversedBy: 'expenses')]
-    #[ORM\JoinColumn(nullable: false)]
+    #[ORM\JoinColumn(nullable: true)]
     private ?Transaction $transaction = null;
 
     #[ORM\Column(type: 'uuid', nullable: true)]

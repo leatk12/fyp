@@ -1,5 +1,3 @@
-// transaction.js
-
 document.addEventListener('DOMContentLoaded', () => {
     // This field corresponds to the name of the form input "isExpenseOrRevenue"
     const isExpRevField = document.querySelector('#transaction_isExpenseOrRevenue');
@@ -14,14 +12,15 @@ document.addEventListener('DOMContentLoaded', () => {
     // The "amount" input
     const amountField = document.getElementById('transaction_amount');
 
-    // We read these global vars from the twig script tags
+    // We read these global vars from the Twig script tags
     const expenseUrl = window.createExpenseUrl;
     const revenueUrl = window.createRevenueUrl;
     const draftUuid = window.draftUuid;
+    const suppliers = window.suppliers || [];
 
     let linesTotal = 0; // Running total of line amounts
 
-    // Show the button if isExpenseOrRevenue == 'EXPENSE' or 'REVENUE'
+    // Show the "Add Lines" button only if isExpenseOrRevenue == 'EXPENSE' or 'REVENUE'
     function updateAddLinesButton() {
         const val = isExpRevField.value;
         if (val === 'EXPENSE' || val === 'REVENUE') {
@@ -33,7 +32,7 @@ document.addEventListener('DOMContentLoaded', () => {
     updateAddLinesButton();
     isExpRevField.addEventListener('change', updateAddLinesButton);
 
-    // When user clicks "Add Lines", open modal
+    // When user clicks "Add Lines", open modal (and clear old lines in the modal)
     addLinesBtn.addEventListener('click', () => {
         linesContainer.innerHTML = "";
         linesModal.show();
@@ -45,30 +44,54 @@ document.addEventListener('DOMContentLoaded', () => {
         lineDiv.classList.add('border', 'p-2', 'mb-2');
 
         const val = isExpRevField.value; // "EXPENSE" or "REVENUE"
+
         if (val === 'EXPENSE') {
+            // Include a supplier <select> + description + amount
             lineDiv.innerHTML = `
+                <label>Supplier</label>
+                <select class="form-control lineSupplier mb-2"></select>
+
                 <label>Description</label>
                 <input type="text" class="form-control lineDesc mb-2" placeholder="Description"/>
+
                 <label>Amount</label>
                 <input type="number" step="0.01" class="form-control lineAmt mb-2" placeholder="Amount"/>
 
                 <button type="button" class="btn btn-sm btn-success commitLineBtn">Save this Expense</button>
             `;
+
+            // Populate the supplier dropdown
+            const supplierSelect = lineDiv.querySelector('.lineSupplier');
+            const defaultOption = document.createElement('option');
+            defaultOption.value = '';
+            defaultOption.textContent = 'Select a supplier...';
+            supplierSelect.appendChild(defaultOption);
+
+            suppliers.forEach(sup => {
+                const opt = document.createElement('option');
+                opt.value = sup.id;
+                // Use the 'organisation' field as requested
+                opt.textContent = sup.organisation || 'No Organisation';
+                supplierSelect.appendChild(opt);
+            });
+
         } else {
             // REVENUE
             lineDiv.innerHTML = `
                 <label>Source</label>
                 <input type="text" class="form-control lineSource mb-2" placeholder="Revenue source"/>
+
                 <label>Amount</label>
                 <input type="number" step="0.01" class="form-control lineAmt mb-2" placeholder="Amount"/>
 
                 <button type="button" class="btn btn-sm btn-success commitLineBtn">Save this Revenue</button>
             `;
         }
+
         linesContainer.appendChild(lineDiv);
     });
 
-    // "Save this Expense/Revenue" => AJAX call
+    // When user clicks "Save this Expense/Revenue", do an AJAX call
     linesContainer.addEventListener('click', async (event) => {
         if (!event.target.classList.contains('commitLineBtn')) return;
 
@@ -76,12 +99,16 @@ document.addEventListener('DOMContentLoaded', () => {
         const val = isExpRevField.value; // "EXPENSE" or "REVENUE"
 
         let amtVal = 0;
+
         if (val === 'EXPENSE') {
+            // Gather data including supplier
+            const supplierId = parent.querySelector('.lineSupplier')?.value || null;
             const desc = parent.querySelector('.lineDesc').value || '';
             amtVal = parseFloat(parent.querySelector('.lineAmt').value || '0');
 
             const payload = {
                 draftUuid: draftUuid,
+                supplierId: supplierId,
                 description: desc,
                 amount: amtVal
             };
@@ -101,7 +128,9 @@ document.addEventListener('DOMContentLoaded', () => {
                 console.error(e);
                 alert('Failed to create expense line.');
             }
+
         } else if (val === 'REVENUE') {
+            // Gather data for revenue
             const source = parent.querySelector('.lineSource').value || '';
             amtVal = parseFloat(parent.querySelector('.lineAmt').value || '0');
 
