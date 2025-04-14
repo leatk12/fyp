@@ -1,0 +1,287 @@
+@startuml
+skinparam classAttributeIconSize 0
+
+class "App\Controller\CustomerController" {
+  +index()
+  +new()
+  +edit()
+  +delete()
+}
+
+class "App\Controller\ExpRevController" {
+  +createExpense()
+  +createRevenue()
+}
+
+class "App\Controller\SupplierController" {
+  +index()
+  +new()
+  +edit()
+  +delete()
+}
+
+class "App\Controller\TransactionController" {
+  +index()
+  +new()
+  +edit()
+  +delete()
+}
+
+class "App\DataFixtures\CustomerFixtures" {
+  +load()
+}
+
+class "App\Entity\Account" {
+  +getId()
+  +getCode()
+  +setCode()
+  +getName()
+  +setName()
+  +getType()
+  +setType()
+  +getBalance()
+  +setBalance()
+}
+
+class "App\Entity\BookingCustomer" {
+  +getId()
+  +getOrganisation()
+  +setOrganisation()
+  +getRepresentative()
+  +setRepresentative()
+  +getPhone()
+  +setPhone()
+  +getEmail()
+  +setEmail()
+  +getType()
+  +setType()
+}
+
+class "App\Entity\Customer" {
+  +getId()
+  +getName()
+  +setName()
+  +getOrganisation()
+  +setOrganisation()
+  +getEmail()
+  +setEmail()
+  +getPhone()
+  +setPhone()
+  +getAddress()
+  +setAddress()
+}
+
+class "App\Entity\Expense" {
+  +getDraftUuid()
+  +setDraftUuid()
+  +getTransaction()
+  +setTransaction()
+  +getId()
+  +getSupplierId()
+  +setSupplierId()
+  +getDateIncurred()
+  +setDateIncurred()
+  +getDescription()
+  +setDescription()
+  +getAmount()
+  +setAmount()
+  +getAccountId()
+  +setAccountId()
+}
+
+class "App\Entity\Invoice" {
+  +getId()
+  +getInvoiceNumber()
+  +setInvoiceNumber()
+  +getCustomerId()
+  +setCustomerId()
+  +getDateIssued()
+  +setDateIssued()
+  +getDueDate()
+  +setDueDate()
+  +getStatus()
+  +setStatus()
+  +getTotal()
+  +setTotal()
+}
+
+class "App\Entity\InvoiceLine" {
+  +getId()
+  +getInvoiceId()
+  +setInvoiceId()
+  +getDescription()
+  +setDescription()
+  +getQuantity()
+  +setQuantity()
+  +getUnitPrice()
+  +setUnitPrice()
+}
+
+class "App\Entity\Revenue" {
+  +getTransaction()
+  +setTransaction()
+  +getDraftUuid()
+  +setdraftUuid()
+  +getId()
+  +getSource()
+  +setSource()
+  +getAmount()
+  +setAmount()
+  +getSpendingConstraints()
+  +setSpendingConstraints()
+  +getActualConstraints()
+  +setActualConstraints()
+}
+
+class "App\Entity\Supplier" {
+  +getId()
+  +getName()
+  +setName()
+  +getOrganisation()
+  +setOrganisation()
+  +getEmail()
+  +setEmail()
+  +getPhone()
+  +setPhone()
+  +getAddress()
+  +setAddress()
+}
+
+class "App\Entity\Transaction" {
+  +__construct()
+  +getIsExpenseOrRevenue()
+  +setIsExpenseOrRevenue()
+  +getCategory()
+  +setCategory()
+  +getUuid()
+  +setUuid()
+  +getExpenses()
+  +addExpense()
+  +removeExpense()
+  +getRevenues()
+  +addRevenue()
+  +removeRevenue()
+  +getId()
+  +getDate()
+  +setDate()
+  +getDescription()
+  +setDescription()
+  +getAccountId()
+  +setAccountId()
+  +getAmount()
+  +setAmount()
+  +getType()
+  +setType()
+}
+
+class "App\Form\TransactionType" {
+  +buildForm()
+  +configureOptions()
+}
+
+class "App\Repository\AccountRepository" {
+  +__construct()
+  +findByExampleField()
+  +findOneBySomeField()
+}
+
+class "App\Repository\BookingCustomerRepository" {
+  +__construct()
+  +findByExampleField()
+  +findOneBySomeField()
+}
+
+class "App\Repository\CustomerRepository" {
+  +__construct()
+  +findByExampleField()
+  +findOneBySomeField()
+}
+
+class "App\Repository\ExpenseRepository" {
+  +__construct()
+  +findByExampleField()
+  +findOneBySomeField()
+}
+
+class "App\Repository\InvoiceLineRepository" {
+  +__construct()
+  +findByExampleField()
+  +findOneBySomeField()
+}
+
+class "App\Repository\InvoiceRepository" {
+  +__construct()
+  +findByExampleField()
+  +findOneBySomeField()
+}
+
+class "App\Repository\RevenueRepository" {
+  +__construct()
+  +findByExampleField()
+  +findOneBySomeField()
+}
+
+class "App\Repository\SupplierRepository" {
+  +__construct()
+  +findByExampleField()
+  +findOneBySomeField()
+}
+
+class "App\Repository\TransactionRepository" {
+  +__construct()
+  +findByExampleField()
+  +findOneBySomeField()
+}
+
+"App\Controller\CustomerController" --|> "AbstractController"
+"App\Controller\CustomerController" ..> "App\Entity\Customer" : uses
+"App\Controller\CustomerController" ..> "App\Repository\CustomerRepository" : uses
+"App\Controller\ExpRevController" --|> "AbstractController"
+"App\Controller\ExpRevController" ..> "App\Entity\Expense" : uses
+"App\Controller\ExpRevController" ..> "App\Entity\Revenue" : uses
+"App\Controller\ExpRevController" ..> "App\Entity\Supplier" : uses
+"App\Controller\SupplierController" --|> "AbstractController"
+"App\Controller\SupplierController" ..> "App\Entity\Supplier" : uses
+"App\Controller\SupplierController" ..> "App\Repository\SupplierRepository" : uses
+"App\Controller\TransactionController" --|> "AbstractController"
+"App\Controller\TransactionController" ..> "App\Entity\Transaction" : uses
+"App\Controller\TransactionController" ..> "App\Entity\Expense" : uses
+"App\Controller\TransactionController" ..> "App\Entity\Revenue" : uses
+"App\Controller\TransactionController" ..> "App\Entity\Supplier" : uses
+"App\Controller\TransactionController" ..> "App\Form\TransactionType" : uses
+"App\Controller\TransactionController" ..> "App\Repository\TransactionRepository" : uses
+"App\DataFixtures\CustomerFixtures" --|> "Fixture"
+"App\DataFixtures\CustomerFixtures" ..> "App\Entity\BookingCustomer" : uses
+"App\Entity\Account" ..> "App\Repository\AccountRepository" : uses
+"App\Entity\BookingCustomer" ..> "App\Repository\BookingCustomerRepository" : uses
+"App\Entity\Customer" ..> "App\Repository\CustomerRepository" : uses
+"App\Entity\Expense" ..> "App\Repository\ExpenseRepository" : uses
+"App\Entity\Invoice" ..> "App\Repository\InvoiceRepository" : uses
+"App\Entity\InvoiceLine" ..> "App\Repository\InvoiceLineRepository" : uses
+"App\Entity\Revenue" ..> "App\Repository\RevenueRepository" : uses
+"App\Entity\Revenue" ..> "App\Entity\Transaction" : uses
+"App\Entity\Supplier" ..> "App\Repository\SupplierRepository" : uses
+"App\Entity\Transaction" ..> "App\Repository\TransactionRepository" : uses
+"App\Entity\Transaction" ..> "App\Entity\Expense" : uses
+"App\Entity\Transaction" ..> "App\Entity\Revenue" : uses
+"App\Form\TransactionType" --|> "AbstractType"
+"App\Form\TransactionType" ..> "App\Entity\Transaction" : uses
+"App\Repository\AccountRepository" --|> "ServiceEntityRepository"
+"App\Repository\AccountRepository" ..> "App\Entity\Account" : uses
+"App\Repository\BookingCustomerRepository" --|> "ServiceEntityRepository"
+"App\Repository\BookingCustomerRepository" ..> "App\Entity\BookingCustomer" : uses
+"App\Repository\CustomerRepository" --|> "ServiceEntityRepository"
+"App\Repository\CustomerRepository" ..> "App\Entity\Customer" : uses
+"App\Repository\ExpenseRepository" --|> "ServiceEntityRepository"
+"App\Repository\ExpenseRepository" ..> "App\Entity\Expense" : uses
+"App\Repository\InvoiceLineRepository" --|> "ServiceEntityRepository"
+"App\Repository\InvoiceLineRepository" ..> "App\Entity\InvoiceLine" : uses
+"App\Repository\InvoiceRepository" --|> "ServiceEntityRepository"
+"App\Repository\InvoiceRepository" ..> "App\Entity\Invoice" : uses
+"App\Repository\RevenueRepository" --|> "ServiceEntityRepository"
+"App\Repository\RevenueRepository" ..> "App\Entity\Revenue" : uses
+"App\Repository\SupplierRepository" --|> "ServiceEntityRepository"
+"App\Repository\SupplierRepository" ..> "App\Entity\Supplier" : uses
+"App\Repository\TransactionRepository" --|> "ServiceEntityRepository"
+"App\Repository\TransactionRepository" ..> "App\Entity\Transaction" : uses
+@enduml

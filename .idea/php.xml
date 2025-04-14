@@ -91,9 +91,44 @@
       <path value="$PROJECT_DIR$/vendor/symfony/polyfill-intl-icu" />
       <path value="$PROJECT_DIR$/vendor/symfony/form" />
       <path value="$PROJECT_DIR$/vendor/symfony/options-resolver" />
+      <path value="$PROJECT_DIR$/vendor/phpstan/phpstan" />
+      <path value="$PROJECT_DIR$/tools/vendor/phpdocumentor/type-resolver" />
+      <path value="$PROJECT_DIR$/tools/vendor/phpdocumentor/reflection-common" />
+      <path value="$PROJECT_DIR$/tools/vendor/phpdocumentor/graphviz" />
+      <path value="$PROJECT_DIR$/tools/vendor/doctrine/deprecations" />
+      <path value="$PROJECT_DIR$/tools/vendor/composer" />
+      <path value="$PROJECT_DIR$/tools/vendor/symfony/event-dispatcher" />
+      <path value="$PROJECT_DIR$/tools/vendor/symfony/deprecation-contracts" />
+      <path value="$PROJECT_DIR$/tools/vendor/symfony/dependency-injection" />
+      <path value="$PROJECT_DIR$/tools/vendor/symfony/console" />
+      <path value="$PROJECT_DIR$/tools/vendor/symfony/options-resolver" />
+      <path value="$PROJECT_DIR$/tools/vendor/symfony/finder" />
+      <path value="$PROJECT_DIR$/tools/vendor/symfony/filesystem" />
+      <path value="$PROJECT_DIR$/tools/vendor/symfony/event-dispatcher-contracts" />
+      <path value="$PROJECT_DIR$/tools/vendor/psr/log" />
+      <path value="$PROJECT_DIR$/tools/vendor/psr/event-dispatcher" />
+      <path value="$PROJECT_DIR$/tools/vendor/psr/container" />
+      <path value="$PROJECT_DIR$/tools/vendor/symfony/config" />
+      <path value="$PROJECT_DIR$/tools/vendor/qossmic/deptrac" />
+      <path value="$PROJECT_DIR$/tools/vendor/phpstan/phpdoc-parser" />
+      <path value="$PROJECT_DIR$/tools/vendor/nikic/php-parser" />
+      <path value="$PROJECT_DIR$/tools/vendor/symfony/yaml" />
+      <path value="$PROJECT_DIR$/tools/vendor/symfony/polyfill-mbstring" />
+      <path value="$PROJECT_DIR$/tools/vendor/symfony/polyfill-intl-normalizer" />
+      <path value="$PROJECT_DIR$/tools/vendor/symfony/polyfill-intl-grapheme" />
+      <path value="$PROJECT_DIR$/tools/vendor/symfony/polyfill-ctype" />
+      <path value="$PROJECT_DIR$/tools/vendor/symfony/var-exporter" />
+      <path value="$PROJECT_DIR$/tools/vendor/symfony/string" />
+      <path value="$PROJECT_DIR$/tools/vendor/symfony/service-contracts" />
+      <path value="$PROJECT_DIR$/tools/vendor/symfony/polyfill-php80" />
     </include_path>
   </component>
   <component name="PhpProjectSharedConfiguration" php_language_level="8.2" />
+  <component name="PhpStan">
+    <PhpStan_settings>
+      <PhpStanConfiguration tool_path="$PROJECT_DIR$/vendor/bin/phpstan" />
+    </PhpStan_settings>
+  </component>
   <component name="PhpStanOptionsConfiguration">
     <option name="transferred" value="true" />
   </component>

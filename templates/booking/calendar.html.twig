@@ -3,5 +3,9 @@
 {% block title %}Room Booking Calendar{% endblock %}
 
 {% block body %}
-    <div id="calendar" style="max-width: 900px; margin: 50px auto;"></div>
+    <div style="max-width: 900px; margin: 50px auto;">
+        <button id="toggle-view-btn">Switch to Week View</button>
+        <div id="calendar"></div>
+        <ul id="week-view-list" style="display: none; margin-top: 30px;"></ul>
+    </div>
 {% endblock %}

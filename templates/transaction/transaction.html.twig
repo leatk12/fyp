@@ -11,7 +11,21 @@
         </div>
     {% endif %}
 
-    <table class="table table-striped">
+    <p>
+        <a href="{{ path('app_transaction_new') }}" class="btn btn-primary">Create New Transaction</a>
+    </p>
+
+    <div class="mb-3">
+        <label for="filterType">Filter:</label>
+        <select id="filterType" class="form-select w-auto d-inline-block">
+            <option value="ALL">All</option>
+            <option value="REVENUE">Revenue</option>
+            <option value="EXPENSE">Expense</option>
+            <option value="BOOKING">Booking</option>
+        </select>
+    </div>
+
+    <table class="table table-striped" id="transactionTable">
         <thead>
         <tr>
             <th>ID</th>
@@ -24,7 +38,7 @@
         </thead>
         <tbody>
         {% for tx in transactions %}
-            <tr class="transaction-row" data-tx-id="{{ tx.id }}" style="cursor:pointer;">
+            <tr class="transaction-row" data-type="{{ tx.isExpenseOrRevenue }}" data-tx-id="{{ tx.id }}" style="cursor:pointer;">
                 <td>{{ tx.id }}</td>
                 <td>{{ tx.date|date('Y-m-d') }}</td>
                 <td>{{ tx.type }}</td>
@@ -107,14 +121,11 @@
         </tbody>
     </table>
 
-    <p>
-        <a href="{{ path('app_transaction_new') }}" class="btn btn-primary">Create New Transaction</a>
-    </p>
-
-    {# JavaScript to toggle the details row when a transaction row is clicked #}
     <script>
         document.addEventListener('DOMContentLoaded', function() {
             const transactionRows = document.querySelectorAll('.transaction-row');
+            const filterSelect = document.getElementById('filterType');
+
             transactionRows.forEach(row => {
                 row.addEventListener('click', function() {
                     const txId = this.dataset.txId;
@@ -124,6 +135,26 @@
                     } else {
                         detailsRow.style.display = 'none';
                     }
+                });
+            });
+
+            filterSelect.addEventListener('change', function() {
+                const selectedType = this.value;
+                transactionRows.forEach(row => {
+                    const rowType = row.dataset.type;
+                    const txId = row.dataset.txId;
+                    const detailsRow = document.getElementById('details-' + txId);
+                    const description = row.querySelector('td:nth-child(4)')?.textContent || '';
+
+                    const isBooking = description.toLowerCase().includes('room booking');
+
+                    const shouldShow =
+                        selectedType === 'ALL' ||
+                        (selectedType === 'BOOKING' && isBooking) ||
+                        (selectedType !== 'BOOKING' && rowType === selectedType);
+
+                    row.style.display = shouldShow ? '' : 'none';
+                    if (detailsRow) detailsRow.style.display = 'none';
                 });
             });
         });

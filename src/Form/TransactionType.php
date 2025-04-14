@@ -24,7 +24,7 @@ class TransactionType extends AbstractType
                 'label' => 'Is this Expense or Revenue?',
                 'required' => true,
             ])
-            // 2) The “category” choice with a big list
+            // 2) The “category” choice list
             ->add('category', ChoiceType::class, [
                 'choices' => [
                     'Rent' => 'Rent',

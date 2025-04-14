@@ -1,0 +1,14 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<files psalm-version="4.x-dev@">
+  <file src="src/Ast/Parser/NikicPhpParser/FileReferenceVisitor.php">
+    <RedundantConditionGivenDocblockType occurrences="2">
+      <code>isset($node-&gt;namespacedName)</code>
+      <code>isset($node-&gt;namespacedName)</code>
+    </RedundantConditionGivenDocblockType>
+  </file>
+  <file src="src/Ast/Parser/NikicPhpParser/NikicPhpParser.php">
+    <RedundantConditionGivenDocblockType occurrences="1">
+      <code>isset($classLikeNode-&gt;namespacedName)</code>
+    </RedundantConditionGivenDocblockType>
+  </file>
+</files>

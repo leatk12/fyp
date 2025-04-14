@@ -1,0 +1,134 @@
+@startuml
+skinparam classAttributeIconSize 0
+
+class "App\Controller\BookingController" {
+  +index()
+  +createBooking()
+  +fetchBookings()
+  +fetchRooms()
+  +fetchCustomers()
+  +addCustomer()
+  +updateBooking()
+  +deleteBooking()
+}
+
+class "App\Controller\CalendarController" {
+  +index()
+}
+
+class "App\DataFixtures\recurrences" {
+  +load()
+}
+
+class "App\DataFixtures\RoomFixtures" {
+  +load()
+}
+
+class "App\Entity\Booking" {
+  +getId()
+  +getDate()
+  +setDate()
+  +getTimeStart()
+  +setTimeStart()
+  +getTimeEnd()
+  +setTimeEnd()
+  +getRoom()
+  +setRoom()
+  +getBookedBy()
+  +setBookedBy()
+  +getCustId()
+  +setCustId()
+  +getRecurrenceCount()
+  +setRecurrenceCount()
+  +getSeriesId()
+  +setSeriesId()
+  +getCost()
+  +setCost()
+}
+
+class "App\Entity\BookingCustomer" {
+  +getId()
+  +getOrganisation()
+  +setOrganisation()
+  +getRepresentative()
+  +setRepresentative()
+  +getPhone()
+  +setPhone()
+  +getEmail()
+  +setEmail()
+  +getType()
+  +setType()
+}
+
+class "App\Entity\Recurrence" {
+  +getId()
+  +getRecurring()
+  +setRecurring()
+}
+
+class "App\Entity\Room" {
+  +getId()
+  +getRoomName()
+  +setRoomName()
+  +getCostIndividual()
+  +setCostIndividual()
+  +getCostPrivate()
+  +setCostPrivate()
+  +getCostCommunity()
+  +setCostCommunity()
+  +getMaxOccupancy()
+  +setMaxOccupancy()
+  +getOrganisation()
+  +setOrganisation()
+  +getCostForType()
+}
+
+class "App\Repository\BookingCustomerRepository" {
+  +__construct()
+  +findByExampleField()
+  +findOneBySomeField()
+}
+
+class "App\Repository\BookingRepository" {
+  +__construct()
+}
+
+class "App\Repository\RecurrenceRepository" {
+  +__construct()
+  +findByExampleField()
+  +findOneBySomeField()
+}
+
+class "App\Repository\RoomRepository" {
+  +__construct()
+  +findByExampleField()
+  +findOneBySomeField()
+}
+
+class "App\Service\RecurringBookingService" {
+  +generateDates()
+}
+
+"App\Controller\BookingController" --|> "AbstractController"
+"App\Controller\BookingController" ..> "App\Repository\BookingRepository" : uses
+"App\Controller\BookingController" ..> "App\Repository\RoomRepository" : uses
+"App\Controller\BookingController" ..> "App\Repository\BookingCustomerRepository" : uses
+"App\Controller\BookingController" ..> "App\Entity\Booking" : uses
+"App\Controller\CalendarController" --|> "AbstractController"
+"App\DataFixtures\recurrences" --|> "Fixture"
+"App\DataFixtures\recurrences" ..> "App\Entity\Recurrence" : uses
+"App\DataFixtures\RoomFixtures" --|> "Fixture"
+"App\DataFixtures\RoomFixtures" ..> "App\Entity\Room" : uses
+"App\Entity\Booking" ..> "App\Repository\BookingRepository" : uses
+"App\Entity\BookingCustomer" ..> "App\Repository\BookingCustomerRepository" : uses
+"App\Entity\Recurrence" ..> "App\Repository\RecurrenceRepository" : uses
+"App\Entity\Room" ..> "App\Repository\RoomRepository" : uses
+"App\Repository\BookingCustomerRepository" --|> "ServiceEntityRepository"
+"App\Repository\BookingCustomerRepository" ..> "App\Entity\BookingCustomer" : uses
+"App\Repository\BookingRepository" --|> "ServiceEntityRepository"
+"App\Repository\BookingRepository" ..> "App\Entity\Booking" : uses
+"App\Repository\RecurrenceRepository" --|> "ServiceEntityRepository"
+"App\Repository\RecurrenceRepository" ..> "App\Entity\Recurrence" : uses
+"App\Repository\RoomRepository" --|> "ServiceEntityRepository"
+"App\Repository\RoomRepository" ..> "App\Entity\Room" : uses
+@enduml
