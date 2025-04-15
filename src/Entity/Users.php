@@ -2,14 +2,14 @@
 
 namespace App\Entity;
 
-use App\Repository\ManagerRepository;
+use App\Repository\UsersRepository;
 use Doctrine\ORM\Mapping as ORM;
 use Symfony\Component\Security\Core\User\PasswordAuthenticatedUserInterface;
 use Symfony\Component\Security\Core\User\UserInterface;
 
-#[ORM\Entity(repositoryClass: ManagerRepository::class)]
+#[ORM\Entity(repositoryClass: UsersRepository::class)]
 #[ORM\UniqueConstraint(name: 'UNIQ_IDENTIFIER_EMAIL', fields: ['email'])]
-class Manager implements UserInterface, PasswordAuthenticatedUserInterface
+class Users implements UserInterface, PasswordAuthenticatedUserInterface
 {
     #[ORM\Id]
     #[ORM\GeneratedValue]
@@ -30,6 +30,24 @@ class Manager implements UserInterface, PasswordAuthenticatedUserInterface
      */
     #[ORM\Column]
     private ?string $password = null;
+
+    public const USER_TYPES = ['Admin', 'User'];
+
+    #[ORM\ManyToOne(targetEntity: UserType::class)]
+    #[ORM\JoinColumn(nullable: false)]
+    private ?UserType $userType = null;
+
+    public function getUserType(): ?UserType
+    {
+        return $this->userType;
+    }
+
+    public function setUserType(UserType $userType): static
+    {
+        $this->userType = $userType;
+
+        return $this;
+    }
 
     public function getId(): ?int
     {
