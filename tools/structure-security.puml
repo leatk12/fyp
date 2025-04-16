@@ -1,0 +1,101 @@
+@startuml
+skinparam classAttributeIconSize 0
+left to right direction
+
+class "App\Controller\AuthController" {
+  +login()
+  +logout()
+}
+
+class "App\Entity\FinanceOfficer" {
+  +getId()
+  +getEmail()
+  +setEmail()
+  +getUserIdentifier()
+  +getRoles()
+  +setRoles()
+  +getPassword()
+  +setPassword()
+  +eraseCredentials()
+}
+
+class "App\Entity\Manager" {
+  +getId()
+  +getEmail()
+  +setEmail()
+  +getUserIdentifier()
+  +getRoles()
+  +setRoles()
+  +getPassword()
+  +setPassword()
+  +eraseCredentials()
+}
+
+class "App\Repository\FinanceOfficerRepository" {
+  +__construct()
+  +upgradePassword()
+  +findByExampleField()
+  +findOneBySomeField()
+}
+
+class "App\Repository\ManagerRepository" {
+  +__construct()
+  +upgradePassword()
+  +findByExampleField()
+  +findOneBySomeField()
+}
+
+class "App\Security\UserAuthenticator" {
+  +__construct()
+  +authenticate()
+  +onAuthenticationSuccess()
+}
+
+"App\Controller\AuthController" --|> "AbstractController"
+"App\Controller\AuthController" ..> "Symfony\Bundle\FrameworkBundle\Controller\AbstractController" : uses
+"App\Controller\AuthController" ..> "Symfony\Component\HttpFoundation\Response" : uses
+"App\Controller\AuthController" ..> "Symfony\Component\Routing\Attribute\Route" : uses
+"App\Controller\AuthController" ..> "Symfony\Component\Security\Http\Authentication\AuthenticationUtils" : uses
+"App\Entity\FinanceOfficer" ..|> "UserInterface"
+"App\Entity\FinanceOfficer" ..|> "PasswordAuthenticatedUserInterface"
+"App\Entity\FinanceOfficer" ..> "App\Repository\FinanceOfficerRepository" : uses
+"App\Entity\FinanceOfficer" ..> "Doctrine\ORM\Mapping as ORM" : uses
+"App\Entity\FinanceOfficer" ..> "Symfony\Component\Security\Core\User\PasswordAuthenticatedUserInterface" : uses
+"App\Entity\FinanceOfficer" ..> "Symfony\Component\Security\Core\User\UserInterface" : uses
+"App\Entity\Manager" ..|> "UserInterface"
+"App\Entity\Manager" ..|> "PasswordAuthenticatedUserInterface"
+"App\Entity\Manager" ..> "App\Repository\ManagerRepository" : uses
+"App\Entity\Manager" ..> "Doctrine\ORM\Mapping as ORM" : uses
+"App\Entity\Manager" ..> "Symfony\Component\Security\Core\User\PasswordAuthenticatedUserInterface" : uses
+"App\Entity\Manager" ..> "Symfony\Component\Security\Core\User\UserInterface" : uses
+"App\Repository\FinanceOfficerRepository" --|> "ServiceEntityRepository"
+"App\Repository\FinanceOfficerRepository" ..|> "PasswordUpgraderInterface"
+"App\Repository\FinanceOfficerRepository" ..> "App\Entity\FinanceOfficer" : uses
+"App\Repository\FinanceOfficerRepository" ..> "Doctrine\Bundle\DoctrineBundle\Repository\ServiceEntityRepository" : uses
+"App\Repository\FinanceOfficerRepository" ..> "Doctrine\Persistence\ManagerRegistry" : uses
+"App\Repository\FinanceOfficerRepository" ..> "Symfony\Component\Security\Core\Exception\UnsupportedUserException" : uses
+"App\Repository\FinanceOfficerRepository" ..> "Symfony\Component\Security\Core\User\PasswordAuthenticatedUserInterface" : uses
+"App\Repository\FinanceOfficerRepository" ..> "Symfony\Component\Security\Core\User\PasswordUpgraderInterface" : uses
+"App\Repository\ManagerRepository" --|> "ServiceEntityRepository"
+"App\Repository\ManagerRepository" ..|> "PasswordUpgraderInterface"
+"App\Repository\ManagerRepository" ..> "App\Entity\Manager" : uses
+"App\Repository\ManagerRepository" ..> "Doctrine\Bundle\DoctrineBundle\Repository\ServiceEntityRepository" : uses
+"App\Repository\ManagerRepository" ..> "Doctrine\Persistence\ManagerRegistry" : uses
+"App\Repository\ManagerRepository" ..> "Symfony\Component\Security\Core\Exception\UnsupportedUserException" : uses
+"App\Repository\ManagerRepository" ..> "Symfony\Component\Security\Core\User\PasswordAuthenticatedUserInterface" : uses
+"App\Repository\ManagerRepository" ..> "Symfony\Component\Security\Core\User\PasswordUpgraderInterface" : uses
+"App\Security\UserAuthenticator" --|> "AbstractLoginFormAuthenticator"
+"App\Security\UserAuthenticator" ..> "Symfony\Component\HttpFoundation\RedirectResponse" : uses
+"App\Security\UserAuthenticator" ..> "Symfony\Component\HttpFoundation\Request" : uses
+"App\Security\UserAuthenticator" ..> "Symfony\Component\HttpFoundation\Response" : uses
+"App\Security\UserAuthenticator" ..> "Symfony\Component\Routing\Generator\UrlGeneratorInterface" : uses
+"App\Security\UserAuthenticator" ..> "Symfony\Component\Security\Core\Authentication\Token\TokenInterface" : uses
+"App\Security\UserAuthenticator" ..> "Symfony\Component\Security\Http\Authenticator\AbstractLoginFormAuthenticator" : uses
+"App\Security\UserAuthenticator" ..> "Symfony\Component\Security\Http\Authenticator\Passport\Badge\CsrfTokenBadge" : uses
+"App\Security\UserAuthenticator" ..> "Symfony\Component\Security\Http\Authenticator\Passport\Badge\RememberMeBadge" : uses
+"App\Security\UserAuthenticator" ..> "Symfony\Component\Security\Http\Authenticator\Passport\Badge\UserBadge" : uses
+"App\Security\UserAuthenticator" ..> "Symfony\Component\Security\Http\Authenticator\Passport\Credentials\PasswordCredentials" : uses
+"App\Security\UserAuthenticator" ..> "Symfony\Component\Security\Http\Authenticator\Passport\Passport" : uses
+"App\Security\UserAuthenticator" ..> "Symfony\Component\Security\Http\SecurityRequestAttributes" : uses
+"App\Security\UserAuthenticator" ..> "Symfony\Component\Security\Http\Util\TargetPathTrait" : uses
+@enduml

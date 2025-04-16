@@ -1,7 +1,7 @@
 {
     "type": "project",
     "license": "proprietary",
-    "minimum-stability": "stable",
+    "minimum-stability": "dev",
     "prefer-stable": true,
     "require": {
         "php": ">=8.2",
@@ -79,6 +79,7 @@
     },
     "require-dev": {
         "doctrine/doctrine-fixtures-bundle": "^4.0",
+        "phpstan/phpstan": "^2.1",
         "symfony/debug-bundle": "7.2.*",
         "symfony/maker-bundle": "^1.62"
     }

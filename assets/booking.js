@@ -150,7 +150,7 @@ document.addEventListener('DOMContentLoaded', () => {
             const phone = document.getElementById('phone').value.trim();
             const email = document.getElementById('email').value.trim();
 
-            // ADDED: read the new "customerType" field from the select
+            // Read new "customerType" field from the select
             const customerType = customerTypeSelect.value;
 
             if (!organisation || !representative || !phone || !email) {
@@ -167,8 +167,6 @@ document.addEventListener('DOMContentLoaded', () => {
                         representative,
                         phone,
                         email,
-
-                        // ADDED: pass the "type" to the server
                         type: customerType
                     }),
                 });
@@ -266,7 +264,7 @@ document.addEventListener('DOMContentLoaded', () => {
             }
         });
 
-        // If user clicks a booked slot, open the edit modal
+        // Open the edit modal when a booked slot is clicked.
         bookingContainer.addEventListener('click', async (ev) => {
             if (ev.target.classList.contains('booked')) {
                 const bookingId = ev.target.dataset.bookingId;
@@ -316,7 +314,6 @@ document.addEventListener('DOMContentLoaded', () => {
     if (recurringSelect) {
         recurringSelect.addEventListener('change', () => {
             const val = recurringSelect.value;
-            // If "none," hide the input; otherwise show it
             if (val === 'none') {
                 recurrenceCountGroup.style.display = 'none';
             } else {
@@ -326,7 +323,7 @@ document.addEventListener('DOMContentLoaded', () => {
     }
 
     // ----------------------------------------------------------------
-    // CREATE BOOKING - SUBMIT
+    // CREATE BOOKING - SUBMIT (including conflict detection handling)
     // ----------------------------------------------------------------
     bookingForm.addEventListener('submit', async (e) => {
         e.preventDefault();
@@ -340,9 +337,8 @@ document.addEventListener('DOMContentLoaded', () => {
                 ? document.getElementById('representative').value
                 : existingCustomerDropdown.value,
             recurring: (recurringSelect?.value || 'none').toLowerCase(),
-
-            // parse the numeric input
             recurrence_count: parseInt(recurrenceCountInput.value, 10) || 1
+            // Optionally, you could supply a "conflictReplacements" object if the UI allowed selecting alternative rooms.
         };
 
         try {
@@ -351,6 +347,35 @@ document.addEventListener('DOMContentLoaded', () => {
                 headers: { 'Content-Type': 'application/json' },
                 body: JSON.stringify(bookingDetails),
             });
+
+            if (response.status === 409) {
+                // Handle conflict warning response.
+                const conflictData = await response.json();
+                let message = "The following recurring booking occurrences have conflicts:\n";
+                conflictData.conflicts.forEach(conflict => {
+                    message += `Date: ${conflict.date}, Room: ${conflict.room}, Time: ${conflict.start} - ${conflict.end}\n`;
+                });
+                message += "\nTo omit these occurrences, click OK. To fix them, please select replacement rooms and re-submit.";
+                if (confirm(message)) {
+                    // User confirms to omit conflicting occurrences.
+                    bookingDetails.force = true;
+                    const retryResponse = await fetch('/api/bookings', {
+                        method: 'POST',
+                        headers: { 'Content-Type': 'application/json' },
+                        body: JSON.stringify(bookingDetails),
+                    });
+                    if (!retryResponse.ok) {
+                        const errText = await retryResponse.text();
+                        throw new Error(`Failed to create booking on retry. ${errText}`);
+                    }
+                    alert("Booking created successfully (conflicting occurrences omitted)!");
+                    closeCreateBookingModal();
+                    location.reload();
+                } else {
+                    alert("Please adjust the conflicting occurrences (e.g. choose replacement rooms) and try again.");
+                }
+                return;
+            }
 
             if (!response.ok) {
                 const errText = await response.text();

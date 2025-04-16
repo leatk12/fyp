@@ -1,0 +1,109 @@
+{% extends 'base.html.twig' %}
+{% block title %}User Management{% endblock %}
+
+{% block body %}
+    <h1>User Management</h1>
+
+    {% if app.session.flashBag.has('success') %}
+        <div class="alert alert-success">
+            {{ app.session.flashBag.get('success')|join('.') }}
+        </div>
+    {% endif %}
+
+    <button class="btn btn-primary mb-3" data-bs-toggle="modal" data-bs-target="#createUserModal">Create New User</button>
+
+    <table class="table table-striped">
+        <thead>
+        <tr>
+            <th>ID</th>
+            <th>Email</th>
+            <th>Roles</th>
+            <th>User Type</th>
+            <th>Actions</th>
+        </tr>
+        </thead>
+        <tbody>
+        {% for user in users %}
+            <tr>
+                <td>{{ user.id }}</td>
+                <td>{{ user.email }}</td>
+                <td>{{ user.roles|join(', ') }}</td>
+                <td>{{ user.userType.userType }}</td>
+                <td>
+                    <button class="btn btn-sm btn-secondary" data-bs-toggle="modal" data-bs-target="#editUserModal{{ user.id }}">Edit</button>
+                    <form method="POST" action="{{ path('app_user_delete', { id: user.id }) }}" style="display:inline;">
+                        <button class="btn btn-sm btn-danger" onclick="return confirm('Delete this user?')">Delete</button>
+                    </form>
+                </td>
+            </tr>
+
+            {# Edit Modal #}
+            <div class="modal fade" id="editUserModal{{ user.id }}" tabindex="-1">
+                <div class="modal-dialog">
+                    <form method="POST" action="{{ path('app_user_edit', { id: user.id }) }}">
+                        <div class="modal-content">
+                            <div class="modal-header">
+                                <h5 class="modal-title">Edit User</h5>
+                                <button type="button" class="btn-close" data-bs-dismiss="modal"></button>
+                            </div>
+                            <div class="modal-body">
+                                <div class="mb-3"><label>Email</label><input type="email" name="email" class="form-control" value="{{ user.email }}" required></div>
+                                <div class="mb-3"><label>New Password (leave blank to keep current)</label><input type="password" name="password" class="form-control"></div>
+                                <div class="mb-3">
+                                    <label>Role</label>
+                                    <select name="role" class="form-control">
+                                        <option value="ROLE_ADMIN" {% if 'ROLE_ADMIN' in user.roles %}selected{% endif %}>Admin</option>
+                                        <option value="ROLE_USER" {% if 'ROLE_USER' in user.roles and 'ROLE_ADMIN' not in user.roles %}selected{% endif %}>User</option>
+                                    </select>
+                                </div>
+                                <div class="mb-3">
+                                    <label>User Type</label>
+                                    <select name="user_type" class="form-control">
+                                        {% for type in userTypes %}
+                                            <option value="{{ type.id }}" {% if type.id == user.userType.id %}selected{% endif %}>{{ type.userType }}</option>
+                                        {% endfor %}
+                                    </select>
+                                </div>
+                            </div>
+                            <div class="modal-footer">
+                                <button class="btn btn-success">Save changes</button>
+                            </div>
+                        </div>
+                    </form>
+                </div>
+            </div>
+        {% endfor %}
+        </tbody>
+    </table>
+
+    {# Create Modal #}
+    <div class="modal fade" id="createUserModal" tabindex="-1">
+        <div class="modal-dialog">
+            <form method="POST" action="{{ path('app_user_create') }}">
+                <div class="modal-content">
+                    <div class="modal-header">
+                        <h5 class="modal-title">Create New User</h5>
+                        <button type="button" class="btn-close" data-bs-dismiss="modal"></button>
+                    </div>
+                            <div class="modal-body">
+                                <div class="mb-3"><label>Email</label><input type="email" name="email" class="form-control" required></div>
+                                    <div class="mb-3"><label>Default Password</label><input type="password" name="password" class="form-control" required></div>
+                                         <div class="mb-3">
+                                             <label>Role</label>
+                                                 <select name="role" class="form-control">
+                                                 <option value="ROLE_ADMIN">Admin</option>
+                                                 <option value="ROLE_USER" selected>User</option>
+                                                 </select>
+                                         </div>
+                                     <div>
+                                </div>
+                            <div class="modal-footer">
+                             <button class="btn btn-success">Create User</button>
+                             </div>
+                            </div>
+                </div>
+            </form>
+        </div>
+    </div>
+
+{% endblock %}

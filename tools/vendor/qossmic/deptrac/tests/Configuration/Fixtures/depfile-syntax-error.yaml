@@ -1,0 +1,29 @@
+deptrac:
+  paths:
+    - app/
+
+  layers:
+    - name: Controller
+      collectors:
+        - type: className
+          value: .*Controller.*
+    - name: ViewModel
+      collectors:
+        - type: className
+          value: ^(.*\\viewmodel\\.*)$
+    - name: Service
+      collectors:
+        - type: className
+          value: .*\\service\\.*
+    - name: Business
+      collectors:
+        - type: className
+          value: .*\\business\\.*
+  ruleset:
+    ViewModel:
+      - Business
+    Controller:
+      - Service
+      - ViewModel
+    ViewModel:
+      - Business

@@ -54,9 +54,9 @@ class CustomerController extends AbstractController
         if ($request->isMethod('POST')) {
             $name = $request->request->get('name');
             // If "name" is not in the form data, this becomes null
-            // So check for that, or make name optional in your entity
 
-            // If name is required, do something like:
+
+            // If name is required:
             if (null === $name) {
                 $this->addFlash('error', 'Name cannot be null.');
                 return $this->redirectToRoute('app_customer_edit', ['id' => $customer->getId()]);
