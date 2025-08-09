@@ -20,7 +20,9 @@
 <!-- Top Navbar -->
 <nav class="navbar navbar-expand-lg navbar-light bg-light">
     <div class="container-fluid">
-        <a class="navbar-brand" href="#">Your Brand</a>
+        <a class="navbar-brand" href="#">
+            <img src="{{ asset('build/images/ncaLogo.png') }}" alt="Logo" style="height: 40px;" class="d-inline-block align-text-top">
+        </a>
         <div class="collapse navbar-collapse">
             <ul class="navbar-nav me-auto mb-2 mb-lg-0">
                 <!-- Add other navigation items here -->
@@ -79,6 +81,10 @@
             <li class="list-group-item">
                 <a href="{{ path('app_calendar') }}">Calendar</a>
             </li>
+            <li class="list-group-item fw-bold">Reports</li>
+            <li class="list-group-item">
+                <a href="{{  path('app_booking_report') }}">Bookings List</a>
+            </li>
 
             <!-- Spacing or Divider -->
             <li class="list-group-item bg-light border-0">&nbsp;</li>
@@ -126,6 +132,21 @@
 {#    {% if app.request.attributes.get('_route') == 'app_booking' %}#}
 {#        {{ encore_entry_script_tags('booking') }}#}
 {#    {% endif %}#}
+    <script>
+        document.addEventListener('DOMContentLoaded', function() {
+            const sidebar = document.getElementById('sidebarOffcanvas');
+            const menuButton = document.querySelector('.offcanvas-btn');
+
+            sidebar.addEventListener('show.bs.offcanvas', function () {
+                menuButton.style.transform = 'translateY(-50%) translateX(400px)';
+            });
+
+            sidebar.addEventListener('hide.bs.offcanvas', function () {
+                menuButton.style.transform = 'translateY(-50%) translateX(0)';
+            });
+        });
+    </script>
+
 
 {% endblock %}
 </body>
