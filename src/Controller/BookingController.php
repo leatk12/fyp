@@ -2,6 +2,7 @@
 
 namespace App\Controller;
 
+// Import required Symfony components and custom entities
 use Symfony\Bundle\FrameworkBundle\Controller\AbstractController;
 use Symfony\Component\HttpFoundation\Request;
 use Symfony\Component\HttpFoundation\JsonResponse;
@@ -18,6 +19,14 @@ use Symfony\Component\Uid\Uuid;
 
 class BookingController extends AbstractController
 {
+    /**
+     * @param Request $request
+     * @param RoomRepository $roomRepository
+     * @return JsonResponse|\Symfony\Component\HttpFoundation\Response
+     *
+     * Render the booking page
+     * Fetches rooms and current date for initial for filling
+     */
     #[Route('/booking', name: 'app_booking')]
     public function index(Request $request, RoomRepository $roomRepository): JsonResponse|\Symfony\Component\HttpFoundation\Response
     {
@@ -30,6 +39,17 @@ class BookingController extends AbstractController
         ]);
     }
 
+    /**
+     * @param Request $request
+     * @param EntityManagerInterface $em
+     * @param BookingCustomerRepository $customerRepo
+     * @param BookingRepository $bookingRepo
+     * @param RoomRepository $roomRepo
+     * @return JsonResponse
+     *
+     * API endpoint to create a single or recurring  booking
+     * Automatically creates a linked revenue transaction
+     */
     #[Route('/api/bookings', name: 'create_booking', methods: ['POST'])]
     public function createBooking(
         Request $request,
@@ -41,12 +61,13 @@ class BookingController extends AbstractController
         try {
             $data = json_decode($request->getContent(), true);
 
+            //Validate required fields
             if (!isset($data['date'], $data['time_start'], $data['time_end'], $data['room'], $data['booked_by'])) {
                 return new JsonResponse(['error' => 'Invalid input. Required fields are missing.'], 400);
             }
 
+            //Validate required fields
             $roomName  = $data['room'];
-            // Create base time objects (using the provided time strings)
             $timeStartObj = new \DateTime($data['time_start']);
             $timeEndObj   = new \DateTime($data['time_end']);
             $date       = new \DateTime($data['date']);
@@ -69,8 +90,9 @@ class BookingController extends AbstractController
             $conflictOccurrences = [];
             $bookingsCreated = 0;
 
+            //Iterate and create bookings for each date
             foreach ($dates as $bookingDate) {
-                // Combine the occurrence date with the provided time parts.
+
                 $startDateTime = (clone $bookingDate)->setTime(
                     (int)$timeStartObj->format('H'),
                     (int)$timeStartObj->format('i')
@@ -117,6 +139,7 @@ class BookingController extends AbstractController
                         ->getResult();
                 }
 
+                //Record conflict, if any, and skip[
                 if (count($conflicts) > 0) {
                     $conflictOccurrences[] = [
                         'date'  => $bookingDate->format('Y-m-d'),
@@ -147,7 +170,7 @@ class BookingController extends AbstractController
                 $em->persist($booking);
                 $bookingsCreated++;
 
-                // Auto-create transaction and revenue.
+                // Auto-create transaction and revenue entities.
                 $transaction = new Transaction();
                 $transaction->setUuid(Uuid::v4());
                 $transaction->setDate($bookingDate);
@@ -168,6 +191,7 @@ class BookingController extends AbstractController
                 $em->persist($revenue);
             }
 
+            //Return conflict warning if applicable
             if (!empty($conflictOccurrences) && empty($data['force'])) {
                 return new JsonResponse(
                     [
@@ -194,6 +218,12 @@ class BookingController extends AbstractController
     }
 
 
+    /**
+     * @param BookingRepository $bookingRepo
+     * @return JsonResponse
+     *
+     * API endpoint to fetch all booking
+     */
     #[Route('/api/bookings', name: 'fetch_bookings', methods: ['GET'])]
     public function fetchBookings(BookingRepository $bookingRepo): JsonResponse
     {
@@ -214,6 +244,15 @@ class BookingController extends AbstractController
         return new JsonResponse($data);
     }
 
+    /**
+     * @param Request $request
+     * @param Booking $booking
+     * @param EntityManagerInterface $em
+     * @return JsonResponse
+     * @throws \Exception
+     *
+     * API endpoint to update an existing booking
+     */
     #[Route('/api/bookings/{id}', name: 'api_booking_update', methods: ['PUT'])]
     public function updateBooking(Request $request, Booking $booking, EntityManagerInterface $em): JsonResponse
     {
@@ -230,6 +269,13 @@ class BookingController extends AbstractController
         return new JsonResponse(['message' => 'Booking updated']);
     }
 
+    /**
+     * @param Booking $booking
+     * @param EntityManagerInterface $em
+     * @return JsonResponse
+     *
+     * API endpoint to delete a booking
+     */
     #[Route('/api/bookings/{id}', name: 'api_booking_delete', methods: ['DELETE'])]
     public function deleteBooking(Booking $booking, EntityManagerInterface $em): JsonResponse
     {
@@ -238,6 +284,12 @@ class BookingController extends AbstractController
         return new JsonResponse(['message' => 'Booking deleted']);
     }
 
+    /**
+     * @param BookingCustomerRepository $repository
+     * @return JsonResponse
+     *
+     * API endpoint to fetch all customers
+     */
     #[Route('/api/customers', name: 'fetch_customers', methods: ['GET'])]
     public function fetchCustomers(BookingCustomerRepository $repository): JsonResponse
     {
@@ -252,6 +304,13 @@ class BookingController extends AbstractController
         return new JsonResponse($data);
     }
 
+    /**
+     * @param Request $request
+     * @param EntityManagerInterface $em
+     * @return JsonResponse
+     *
+     * API endpoint to add a new customer
+     */
     #[Route('/api/customers', name: 'add_customer', methods: ['POST'])]
     public function addCustomer(Request $request, EntityManagerInterface $em): JsonResponse
     {
@@ -274,6 +333,12 @@ class BookingController extends AbstractController
         return new JsonResponse(['status' => 'Customer added successfully']);
     }
 
+    /**
+     * @param RoomRepository $repo
+     * @return JsonResponse
+     *
+     * API endpoint to fetch all rooms
+     */
     #[Route('/api/rooms', name: 'fetch_rooms', methods: ['GET'])]
     public function fetchRooms(RoomRepository $repo): JsonResponse
     {
@@ -286,6 +351,14 @@ class BookingController extends AbstractController
         return new JsonResponse($data);
     }
 
+    /**
+     * @param \DateTime $startDate
+     * @param string $recurring
+     * @param int $count
+     * @return array
+     *
+     * Generate recurring booking dates based on recurrence type
+     */
     private function generateDates(\DateTime $startDate, string $recurring, int $count): array
     {
         $dates = [];

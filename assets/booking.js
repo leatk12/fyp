@@ -1,6 +1,15 @@
 // booking.js
+
+// Execute after the DOM has fully loaded
 document.addEventListener('DOMContentLoaded', () => {
 
+    // Helper: local YYYY-MM-DD (no UTC conversion)
+    const getLocalYmd = (d = new Date()) => {
+        const pad = n => String(n).padStart(2, '0');
+        return `${d.getFullYear()}-${pad(d.getMonth() + 1)}-${pad(d.getDate())}`;
+    };
+
+    //Modal instances for creating and editing bookings
     const bookingModalElement = document.getElementById('bookingModal');
     const bookingModalInstance = new bootstrap.Modal(bookingModalElement);
 
@@ -31,18 +40,19 @@ document.addEventListener('DOMContentLoaded', () => {
     const editPhone = document.getElementById('editPhone');
     const editEmail = document.getElementById('editEmail');
 
+    // State variables
     let isAddingNewCustomer = false;
     let currentBookings = [];
 
-    // Recurrence controls
+    // Recurrence handling elements
     const recurringSelect = document.getElementById('recurring');
     const recurrenceCountGroup = document.getElementById('recurrenceCountGroup');
     const recurrenceCountInput = document.getElementById('recurrenceCount');
 
-    // ADDED: reference the new select for customer type
+    // Customer Type selector
     const customerTypeSelect = document.getElementById('customerType');
 
-    // Helper function
+    // Utility function to verify element's existence
     const checkElement = (element, name) => {
         if (!element) {
             console.error(`Missing element: ${name}`);
@@ -51,12 +61,12 @@ document.addEventListener('DOMContentLoaded', () => {
         return true;
     };
 
-    // Grab ?date= from URL
+    // Retrieve `?date=` query parameter from URL
     const urlParams = new URLSearchParams(window.location.search);
     const pageDate = urlParams.get('date');
 
     // ---------------------------------------
-    // Load Bookings
+    // Load and display Bookings in the grid
     // ---------------------------------------
     const loadBookings = async () => {
         try {
@@ -69,7 +79,7 @@ document.addEventListener('DOMContentLoaded', () => {
                 ? allBookings.filter(b => b.date === pageDate)
                 : allBookings;
 
-            // Display them in the grid
+            // Map bookings onto the booking grid
             currentBookings.forEach(booking => {
                 const startTime = parseInt(booking.time_start.split(':')[0]);
                 const endTime = parseInt(booking.time_end.split(':')[0]);
@@ -104,7 +114,7 @@ document.addEventListener('DOMContentLoaded', () => {
     };
 
     // ---------------------------------------
-    // Load Customers
+    // Load Customer list for the dropdown menu
     // ---------------------------------------
     const loadCustomers = async () => {
         try {
@@ -123,7 +133,7 @@ document.addEventListener('DOMContentLoaded', () => {
         }
     };
 
-    // Initialize
+    // Initialise the page
     loadBookings();
     loadCustomers();
 
@@ -141,7 +151,7 @@ document.addEventListener('DOMContentLoaded', () => {
     }
 
     // ---------------------------------------
-    // Add new customer AJAX
+    // Handle adding a new customer via AJAX
     // ---------------------------------------
     if (checkElement(addCustomerAjaxButton, "Add Customer AJAX Button")) {
         addCustomerAjaxButton.addEventListener('click', async () => {
@@ -288,7 +298,7 @@ document.addEventListener('DOMContentLoaded', () => {
         document.getElementById('bookingStart').value = String(startTime).padStart(2, '0') + ':00';
         document.getElementById('bookingEnd').value = String(endTime).padStart(2, '0') + ':00';
         document.getElementById('bookingDate').value =
-            pageDate || new Date().toISOString().split('T')[0];
+            pageDate || getLocalYmd();
 
         bookingModalInstance.show();
     }
@@ -338,7 +348,7 @@ document.addEventListener('DOMContentLoaded', () => {
                 : existingCustomerDropdown.value,
             recurring: (recurringSelect?.value || 'none').toLowerCase(),
             recurrence_count: parseInt(recurrenceCountInput.value, 10) || 1
-            // Optionally, you could supply a "conflictReplacements" object if the UI allowed selecting alternative rooms.
+
         };
 
         try {

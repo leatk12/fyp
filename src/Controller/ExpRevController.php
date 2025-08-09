@@ -4,7 +4,7 @@ namespace App\Controller;
 
 use App\Entity\Expense;
 use App\Entity\Revenue;
-use App\Entity\Supplier; // <-- Added
+use App\Entity\Supplier;
 use Doctrine\ORM\EntityManagerInterface;
 use Symfony\Component\HttpFoundation\Request;
 use Symfony\Component\HttpFoundation\JsonResponse;

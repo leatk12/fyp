@@ -8,7 +8,7 @@ body {
     top: 50%;
     left: 0;
     transform: translateY(-50%);
-
+    transition: transform 0.37s ease; /* <--- Button slide speed */
     width: 60px;
     height: 140px;
     background-color: #333;

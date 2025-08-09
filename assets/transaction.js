@@ -1,7 +1,9 @@
+//Execute only after the full DOM is loaded
 document.addEventListener('DOMContentLoaded', () => {
     const isExpRevField = document.querySelector('#transaction_isExpenseOrRevenue');
     if (!isExpRevField) return;
 
+    //Initialise key elements
     const addLinesBtn = document.getElementById('addLinesBtn');
     const linesModalEl = document.getElementById('linesModal');
     const linesModal = new bootstrap.Modal(linesModalEl);
@@ -9,13 +11,16 @@ document.addEventListener('DOMContentLoaded', () => {
     const amountField = document.getElementById('transaction_amount');
     const addLineItemBtn = document.getElementById('addLineBtn');
 
+    // URLs and data injected globally by backend template
     const expenseUrl = window.createExpenseUrl;
     const revenueUrl = window.createRevenueUrl;
     const draftUuid = window.draftUuid;
-    const suppliers = window.suppliers || [];
+    const suppliers = window.suppliers || []; //Fallback to an empty array if missing
 
+    //Running total of added line amounts
     let linesTotal = 0;
 
+    //Show or hide the "Add Lines" button based on expense/revenue selection
     function updateAddLinesButton() {
         const val = isExpRevField.value;
         if (val === 'EXPENSE' || val === 'REVENUE') {
@@ -24,23 +29,26 @@ document.addEventListener('DOMContentLoaded', () => {
             addLinesBtn.style.display = 'none';
         }
     }
-    updateAddLinesButton();
-    isExpRevField.addEventListener('change', updateAddLinesButton);
+    updateAddLinesButton(); // Initial check
+    isExpRevField.addEventListener('change', updateAddLinesButton); //Update on change
 
+    //Oen the modal and render initial line form when "Add lines" is clicked
     addLinesBtn.addEventListener('click', () => {
         renderLineForm();
         linesModal.show();
     });
 
+    //Render a new line entry form inside the modal
     function renderLineForm() {
         const val = isExpRevField.value;
         if (!val || (val !== 'EXPENSE' && val !== 'REVENUE')) return;
 
-        linesContainer.innerHTML = '';
+        linesContainer.innerHTML = ''; //Clear previous forms
 
         const lineDiv = document.createElement('div');
         lineDiv.classList.add('border', 'p-2', 'mb-2');
 
+        //Render an EXPENSE line form
         if (val === 'EXPENSE') {
             lineDiv.innerHTML = `
                 <label>Supplier</label>
@@ -55,6 +63,7 @@ document.addEventListener('DOMContentLoaded', () => {
                 <button type="button" class="btn btn-sm btn-success commitLineBtn">Save this Expense</button>
             `;
 
+            //Populate suppliers dropdown
             const supplierSelect = lineDiv.querySelector('.lineSupplier');
             const defaultOption = document.createElement('option');
             defaultOption.value = '';
@@ -67,8 +76,9 @@ document.addEventListener('DOMContentLoaded', () => {
                 opt.textContent = sup.organisation || 'No Organisation';
                 supplierSelect.appendChild(opt);
             });
+            //Render a REVENUE line form
         } else {
-            const uniqueId = 'spendingConstraints-' + Date.now();
+            const uniqueId = 'spendingConstraints-' + Date.now(); //Unique ID for checkbox-label linking
             lineDiv.innerHTML = `
                 <label>Source</label>
                 <input type="text" class="form-control lineSource mb-2" placeholder="Revenue source"/>
@@ -88,6 +98,7 @@ document.addEventListener('DOMContentLoaded', () => {
                 <button type="button" class="btn btn-sm btn-success commitLineBtn">Save this Revenue</button>
             `;
 
+            //Toggle visibility of "Actual Constraints" based on checkbox
             const checkbox = lineDiv.querySelector('.lineSpendingConstraints');
             const actualContainer = lineDiv.querySelector('.actual-constraints-container');
             checkbox.addEventListener('change', function () {
@@ -103,6 +114,7 @@ document.addEventListener('DOMContentLoaded', () => {
         }
     }
 
+    //Handle click event inside the modal (Specifically "Save this" button
     linesContainer.addEventListener('click', async (event) => {
         if (!event.target.classList.contains('commitLineBtn')) return;
 
@@ -110,6 +122,7 @@ document.addEventListener('DOMContentLoaded', () => {
         const val = isExpRevField.value;
         let amtVal = 0;
 
+        //Saving an Expense Line
         if (val === 'EXPENSE') {
             const supplierId = parent.querySelector('.lineSupplier')?.value || null;
             const desc = parent.querySelector('.lineDesc')?.value || '';
@@ -132,12 +145,13 @@ document.addEventListener('DOMContentLoaded', () => {
                 if (result.error) {
                     alert('Error: ' + result.error);
                 } else {
-                    renderLineForm();
+                    renderLineForm(); //Clear and prepare next line form
                 }
             } catch (e) {
                 console.error(e);
                 alert('Failed to create expense line.');
             }
+            //Saving a REVENUE line
         } else if (val === 'REVENUE') {
             const source = parent.querySelector('.lineSource')?.value || '';
             amtVal = parseFloat(parent.querySelector('.lineAmt')?.value || '0');
@@ -165,7 +179,7 @@ document.addEventListener('DOMContentLoaded', () => {
                 if (result.error) {
                     alert('Error: ' + result.error);
                 } else {
-                    renderLineForm();
+                    renderLineForm();  //Prepare for next entry
                 }
             } catch (e) {
                 console.error(e);
@@ -173,6 +187,7 @@ document.addEventListener('DOMContentLoaded', () => {
             }
         }
 
+        //Update the running total on successful line addition
         if (!isNaN(amtVal) && amountField) {
             linesTotal += amtVal;
             amountField.value = linesTotal.toFixed(2);
