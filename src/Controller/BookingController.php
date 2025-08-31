@@ -61,18 +61,21 @@ class BookingController extends AbstractController
         try {
             $data = json_decode($request->getContent(), true);
 
-            //Validate required fields
+            // Validate required fields
             if (!isset($data['date'], $data['time_start'], $data['time_end'], $data['room'], $data['booked_by'])) {
                 return new JsonResponse(['error' => 'Invalid input. Required fields are missing.'], 400);
             }
 
-            //Validate required fields
-            $roomName  = $data['room'];
+            $roomName     = $data['room'];
             $timeStartObj = new \DateTime($data['time_start']);
             $timeEndObj   = new \DateTime($data['time_end']);
-            $date       = new \DateTime($data['date']);
-            $recurring  = strtolower($data['recurring'] ?? 'none');
+            $date         = new \DateTime($data['date']);
+            $recurring    = strtolower($data['recurring'] ?? 'none');
             $recurrenceCount = max(1, (int)($data['recurrence_count'] ?? 1));
+
+            if ($timeEndObj <= $timeStartObj) {
+                return new JsonResponse(['error' => 'End time must be after start time.'], 400);
+            }
 
             $customer = $customerRepo->findOneBy(['representative' => $data['booked_by']]);
             if (!$customer) {
@@ -90,7 +93,7 @@ class BookingController extends AbstractController
             $conflictOccurrences = [];
             $bookingsCreated = 0;
 
-            //Iterate and create bookings for each date
+            // Iterate and create bookings for each date
             foreach ($dates as $bookingDate) {
 
                 $startDateTime = (clone $bookingDate)->setTime(
@@ -104,6 +107,7 @@ class BookingController extends AbstractController
 
                 // Use the original roomName by default.
                 $finalRoomName = $roomName;
+
                 // Check for conflicts in the chosen room.
                 $conflicts = $bookingRepo->createQueryBuilder('b')
                     ->where('b.room = :room')
@@ -139,7 +143,7 @@ class BookingController extends AbstractController
                         ->getResult();
                 }
 
-                //Record conflict, if any, and skip[
+                // Record conflict, if any, and skip
                 if (count($conflicts) > 0) {
                     $conflictOccurrences[] = [
                         'date'  => $bookingDate->format('Y-m-d'),
@@ -163,8 +167,14 @@ class BookingController extends AbstractController
                     $booking->setSeriesId($seriesId);
                 }
 
-                $customerType = $customer->getType();
-                $cost = $room->getCostForType($customerType);
+                // === Calculate cost = hourly × duration (hours) ===
+                $customerType = $customer->getType();           // 'individual' | 'private' | 'community'
+                $hourly       = $room->getCostForType($customerType); // int per hour
+
+                $seconds = $endDateTime->getTimestamp() - $startDateTime->getTimestamp();
+                $hours   = max(0, (int) round($seconds / 3600)); // whole hours based on your grid
+
+                $cost = (int) ($hourly * $hours);
                 $booking->setCost($cost);
 
                 $em->persist($booking);
@@ -191,7 +201,7 @@ class BookingController extends AbstractController
                 $em->persist($revenue);
             }
 
-            //Return conflict warning if applicable
+            // Return conflict warning if applicable
             if (!empty($conflictOccurrences) && empty($data['force'])) {
                 return new JsonResponse(
                     [
@@ -254,15 +264,42 @@ class BookingController extends AbstractController
      * API endpoint to update an existing booking
      */
     #[Route('/api/bookings/{id}', name: 'api_booking_update', methods: ['PUT'])]
-    public function updateBooking(Request $request, Booking $booking, EntityManagerInterface $em): JsonResponse
-    {
+    public function updateBooking(
+        Request $request,
+        Booking $booking,
+        EntityManagerInterface $em,
+        RoomRepository $roomRepo,
+        BookingCustomerRepository $customerRepo
+    ): JsonResponse {
         $data = json_decode($request->getContent(), true);
 
-        $booking->setDate(new \DateTime($data['date'] ?? $booking->getDate()->format('Y-m-d')));
-        $booking->setTimeStart(new \DateTime($data['time_start'] ?? $booking->getTimeStart()->format('H:i')));
-        $booking->setTimeEnd(new \DateTime($data['time_end'] ?? $booking->getTimeEnd()->format('H:i')));
+        $newDate      = new \DateTime($data['date'] ?? $booking->getDate()->format('Y-m-d'));
+        $newStartTime = new \DateTime($data['time_start'] ?? $booking->getTimeStart()->format('H:i'));
+        $newEndTime   = new \DateTime($data['time_end'] ?? $booking->getTimeEnd()->format('H:i'));
+
+        if ($newEndTime <= $newStartTime) {
+            return new JsonResponse(['error' => 'End time must be after start time.'], 400);
+        }
+
+        $booking->setDate($newDate);
+        $booking->setTimeStart($newStartTime);
+        $booking->setTimeEnd($newEndTime);
         $booking->setRoom($data['room_id'] ?? $booking->getRoom());
         $booking->setBookedBy($data['booked_by'] ?? $booking->getBookedBy());
+
+        // Recompute cost (customer type × room hourly × hours)
+        $customer = $customerRepo->find($booking->getCustId());
+        $room     = $roomRepo->findOneBy(['roomName' => $booking->getRoom()]);
+
+        if ($customer && $room) {
+            $customerType = $customer->getType();
+            $hourly       = $room->getCostForType($customerType);
+
+            $seconds = $booking->getTimeEnd()->getTimestamp() - $booking->getTimeStart()->getTimestamp();
+            $hours   = max(0, (int) round($seconds / 3600));
+
+            $booking->setCost((int) ($hourly * $hours));
+        }
 
         $em->flush();
 
@@ -296,9 +333,10 @@ class BookingController extends AbstractController
         $customers = $repository->findAll();
         $data = array_map(fn($c) => [
             'representative' => $c->getRepresentative(),
-            'organisation' => $c->getOrganisation(),
-            'phone' => $c->getPhone(),
-            'email' => $c->getEmail(),
+            'organisation'   => $c->getOrganisation(),
+            'phone'          => $c->getPhone(),
+            'email'          => $c->getEmail(),
+            'type'           => $c->getType() ?? 'individual',
         ], $customers);
 
         return new JsonResponse($data);
@@ -344,8 +382,11 @@ class BookingController extends AbstractController
     {
         $rooms = $repo->findAll();
         $data = array_map(fn($room) => [
-            'id' => $room->getId(),
-            'room_name' => $room->getRoomName()
+            'id'             => $room->getId(),
+            'room_name'      => $room->getRoomName(),
+            'costIndividual' => $room->getCostIndividual(),
+            'costPrivate'    => $room->getCostPrivate(),
+            'costCommunity'  => $room->getCostCommunity(),
         ], $rooms);
 
         return new JsonResponse($data);
