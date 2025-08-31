@@ -9,7 +9,7 @@ document.addEventListener('DOMContentLoaded', () => {
         return `${d.getFullYear()}-${pad(d.getMonth() + 1)}-${pad(d.getDate())}`;
     };
 
-    //Modal instances for creating and editing bookings
+    // Modal instances for creating and editing bookings
     const bookingModalElement = document.getElementById('bookingModal');
     const bookingModalInstance = new bootstrap.Modal(bookingModalElement);
 
@@ -40,17 +40,23 @@ document.addEventListener('DOMContentLoaded', () => {
     const editPhone = document.getElementById('editPhone');
     const editEmail = document.getElementById('editEmail');
 
-    // State variables
-    let isAddingNewCustomer = false;
-    let currentBookings = [];
-
     // Recurrence handling elements
     const recurringSelect = document.getElementById('recurring');
     const recurrenceCountGroup = document.getElementById('recurrenceCountGroup');
     const recurrenceCountInput = document.getElementById('recurrenceCount');
 
-    // Customer Type selector
+    // Customer Type selector (for new customer)
     const customerTypeSelect = document.getElementById('customerType');
+
+    // Live cost display (create modal)
+    const bookingCostDisplay = document.getElementById('bookingCostDisplay');
+
+    // State variables
+    let isAddingNewCustomer = false;
+    let currentBookings = [];
+
+    // Pricing caches
+    let roomsByName = {}; // { [roomName]: { costIndividual, costPrivate, costCommunity } }
 
     // Utility function to verify element's existence
     const checkElement = (element, name) => {
@@ -126,6 +132,7 @@ document.addEventListener('DOMContentLoaded', () => {
                 const opt = document.createElement('option');
                 opt.value = c.representative;
                 opt.textContent = `${c.representative} (${c.organisation || 'No Org'})`;
+                opt.dataset.type = (c.type || 'individual').toLowerCase();
                 existingCustomerDropdown.appendChild(opt);
             });
         } catch (err) {
@@ -133,9 +140,31 @@ document.addEventListener('DOMContentLoaded', () => {
         }
     };
 
+    // ---------------------------------------
+    // Load Rooms + pricing (hourly) for cost calc
+    // ---------------------------------------
+    const loadRooms = async () => {
+        try {
+            const resp = await fetch('/api/rooms');
+            if (!resp.ok) throw new Error(`HTTP ${resp.status}`);
+            const rooms = await resp.json();
+            roomsByName = {};
+            rooms.forEach(r => {
+                roomsByName[r.room_name] = {
+                    costIndividual: Number(r.costIndividual || 0),
+                    costPrivate: Number(r.costPrivate || 0),
+                    costCommunity: Number(r.costCommunity || 0),
+                };
+            });
+        } catch (e) {
+            console.error('Error loading rooms/pricing:', e);
+        }
+    };
+
     // Initialise the page
     loadBookings();
     loadCustomers();
+    loadRooms();
 
     // ---------------------------------------
     // Show/hide new customer fields
@@ -147,6 +176,7 @@ document.addEventListener('DOMContentLoaded', () => {
             if (!isAddingNewCustomer) {
                 existingCustomerDropdown.value = '';
             }
+            renderBookingCost();
         });
     }
 
@@ -192,6 +222,7 @@ document.addEventListener('DOMContentLoaded', () => {
                 const opt = document.createElement('option');
                 opt.value = representative;
                 opt.textContent = `${representative} (${organisation})`;
+                opt.dataset.type = (customerType || 'individual').toLowerCase();
                 existingCustomerDropdown.appendChild(opt);
 
                 existingCustomerDropdown.value = representative;
@@ -199,6 +230,7 @@ document.addEventListener('DOMContentLoaded', () => {
                 isAddingNewCustomer = false;
 
                 alert("New customer added successfully!");
+                renderBookingCost();
             } catch (err) {
                 console.error("Error adding customer:", err);
                 alert(err.message);
@@ -285,6 +317,46 @@ document.addEventListener('DOMContentLoaded', () => {
     }
 
     // ----------------------------------------------------------------
+    // Helpers for cost calculation (create modal)
+    // ----------------------------------------------------------------
+    function currentCustomerType() {
+        if (isAddingNewCustomer) {
+            return (customerTypeSelect?.value || 'individual').toLowerCase();
+        }
+        const sel = existingCustomerDropdown.options[existingCustomerDropdown.selectedIndex];
+        return (sel?.dataset?.type || 'individual').toLowerCase();
+    }
+
+    function currentDurationHours() {
+        const s = document.getElementById('bookingStart').value; // "HH:MM"
+        const e = document.getElementById('bookingEnd').value;
+        if (!s || !e) return 0;
+        const [sh] = s.split(':').map(Number);
+        const [eh] = e.split(':').map(Number);
+        return Math.max(0, eh - sh); // whole hours
+    }
+
+    function currentHourly(roomName, custType) {
+        const r = roomsByName[roomName];
+        if (!r) return 0;
+        switch (custType) {
+            case 'private':   return r.costPrivate;
+            case 'community': return r.costCommunity;
+            default:          return r.costIndividual;
+        }
+    }
+
+    function renderBookingCost() {
+        if (!bookingCostDisplay) return;
+        const roomName = document.getElementById('bookingRoom').value;
+        const type     = currentCustomerType();
+        const hours    = currentDurationHours();
+        const hourly   = currentHourly(roomName, type);
+        const total    = (hourly * hours) || 0;
+        bookingCostDisplay.textContent = `£${Number(total).toFixed(2)}`;
+    }
+
+    // ----------------------------------------------------------------
     // CREATE BOOKING - SHOW/HIDE MODAL
     // ----------------------------------------------------------------
     function openCreateBookingModal(roomId, startTime, endTime) {
@@ -301,6 +373,7 @@ document.addEventListener('DOMContentLoaded', () => {
             pageDate || getLocalYmd();
 
         bookingModalInstance.show();
+        renderBookingCost();
     }
 
     function closeCreateBookingModal() {
@@ -310,6 +383,7 @@ document.addEventListener('DOMContentLoaded', () => {
         newCustomerFields.style.display = 'none';
         isAddingNewCustomer = false;
         recurrenceCountGroup.style.display = 'none';
+        if (bookingCostDisplay) bookingCostDisplay.textContent = '£0.00';
     }
 
     if (checkElement(cancelBookingButton, "Cancel Booking button")) {
@@ -317,6 +391,18 @@ document.addEventListener('DOMContentLoaded', () => {
             closeCreateBookingModal();
         });
     }
+
+    // Recompute cost on field changes
+    const bookingStartEl = document.getElementById('bookingStart');
+    const bookingEndEl   = document.getElementById('bookingEnd');
+    if (existingCustomerDropdown) {
+        existingCustomerDropdown.addEventListener('change', renderBookingCost);
+    }
+    if (customerTypeSelect) {
+        customerTypeSelect.addEventListener('change', renderBookingCost);
+    }
+    if (bookingStartEl) bookingStartEl.addEventListener('change', renderBookingCost);
+    if (bookingEndEl)   bookingEndEl.addEventListener('change', renderBookingCost);
 
     // ----------------------------------------------------------------
     // SHOW/HIDE the "Number of Occurrences" field
@@ -348,7 +434,6 @@ document.addEventListener('DOMContentLoaded', () => {
                 : existingCustomerDropdown.value,
             recurring: (recurringSelect?.value || 'none').toLowerCase(),
             recurrence_count: parseInt(recurrenceCountInput.value, 10) || 1
-
         };
 
         try {
