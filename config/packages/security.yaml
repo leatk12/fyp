@@ -65,7 +65,11 @@ security:
         # 1) Allow unauthenticated access to /login and /register
         - { path: ^/(login|register)$, roles: PUBLIC_ACCESS }
 
-        # 2) Everything else (/) requires authentication
+        # 2) Independent Age pages require a logged-in user (explicit)
+        - { path: ^/independent-age, roles: ROLE_USER }
+
+
+        # 3) Everything else (/) requires authentication
         - { path: ^/, roles: ROLE_USER }
 
 when@test:

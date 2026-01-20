@@ -1,0 +1,49 @@
+{% extends 'base.html.twig' %}
+
+{% block title %}Independent Age — {{ title }}{% endblock %}
+
+{% block body %}
+    <div class="container mt-4">
+        <div class="d-flex justify-content-between align-items-center">
+            <div>
+                <h2 class="mb-1">Independent Age — {{ title }}</h2>
+                {% if record %}
+                    <div class="text-muted">
+                        Customer: <strong>{{ record.fullName }}</strong>
+                        <span class="ms-2 small">({{ record.uuid }})</span>
+                    </div>
+                {% endif %}
+            </div>
+            <a href="{{ path('app_independent_age_index') }}" class="btn btn-outline-secondary">Back to list</a>
+        </div>
+
+        {% for label, messages in app.flashes %}
+            {% for message in messages %}
+                <div class="alert alert-{{ label }} mt-3">{{ message }}</div>
+            {% endfor %}
+        {% endfor %}
+
+        <div class="card mt-3">
+            <div class="card-body">
+                {{ form_start(form) }}
+                <div class="row g-3">
+                    <div class="col-md-3">
+                        {{ form_row(form.date) }}
+                    </div>
+                    <div class="col-md-9">
+                        {{ form_row(form.action) }}
+                    </div>
+                    <div class="col-md-3">
+                        {{ form_row(form.outcome) }}
+                    </div>
+                </div>
+
+                <div class="mt-4 d-flex justify-content-end gap-2">
+                    <a href="{{ path('app_independent_age_index') }}" class="btn btn-secondary">Cancel</a>
+                    <button class="btn btn-success">Save</button>
+                </div>
+                {{ form_end(form) }}
+            </div>
+        </div>
+    </div>
+{% endblock %}
