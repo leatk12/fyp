@@ -3,6 +3,9 @@
 {% block title %}Independent Age — Records{% endblock %}
 
 {% block body %}
+    {# templates/independent_age/index.html.twig #}
+    <!-- DEPLOY MARKER: 2026-01-28 14:00 -->
+
     <div class="container mt-4">
         <div class="d-flex justify-content-between align-items-center">
             <h2 class="mb-0">Independent Age — Records</h2>
@@ -25,7 +28,7 @@
                     <th style="width: 140px;">Heard about</th>
                     <th style="width: 140px;">Housing</th>
                     <th style="width: 180px;">Permissions</th>
-                    <th style="width: 160px;">Actions</th>
+                    <th style="width: 260px;">Actions</th>
                 </tr>
                 </thead>
                 <tbody>
@@ -62,9 +65,38 @@
                             {% endif %}
                         </td>
 
-                        <td>
-                            <a class="btn btn-sm btn-outline-primary"
-                               href="{{ path('app_independent_age_action_new', {recordUuid: r.uuid}) }}">
+                        <td class="d-flex gap-2 flex-wrap">
+                            <button
+                                    type="button"
+                                    class="btn btn-sm btn-outline-secondary ia-view"
+                                    data-url="{{ path('app_independent_age_view', { uuid: r.uuid }) }}"
+                                    data-title="View record"
+                                    data-bs-toggle="modal"
+                                    data-bs-target="#iaRecordModal"
+                            >
+                                View
+                            </button>
+
+                            <button
+                                    type="button"
+                                    class="btn btn-sm btn-outline-primary ia-edit"
+                                    data-url="{{ path('app_independent_age_edit', { uuid: r.uuid }) }}"
+                                    data-title="Edit record"
+                                    data-bs-toggle="modal"
+                                    data-bs-target="#iaRecordModal"
+                            >
+                                Edit
+                            </button>
+
+                            <form method="post"
+                                  action="{{ path('app_independent_age_delete', { uuid: r.uuid }) }}"
+                                  onsubmit="return confirm('Delete this record? This will also delete all actions for it.');">
+                                <input type="hidden" name="_token" value="{{ csrf_token('delete_independent_age_record_' ~ r.uuid) }}">
+                                <button class="btn btn-sm btn-outline-danger">Delete</button>
+                            </form>
+
+                            <a class="btn btn-sm btn-outline-success"
+                               href="{{ path('app_independent_age_action_new', { recordUuid: r.uuid }) }}">
                                 Add action
                             </a>
                         </td>
@@ -95,12 +127,12 @@
                                                         <td>{{ a.outcome is not null ? a.outcome : '—' }}</td>
                                                         <td class="d-flex gap-2">
                                                             <a class="btn btn-sm btn-outline-secondary"
-                                                               href="{{ path('app_independent_age_action_edit', {actionUuid: a.uuid}) }}">
+                                                               href="{{ path('app_independent_age_action_edit', { actionUuid: a.uuid }) }}">
                                                                 Edit
                                                             </a>
 
                                                             <form method="post"
-                                                                  action="{{ path('app_independent_age_action_delete', {actionUuid: a.uuid}) }}"
+                                                                  action="{{ path('app_independent_age_action_delete', { actionUuid: a.uuid }) }}"
                                                                   onsubmit="return confirm('Delete this action?');">
                                                                 <input type="hidden" name="_token" value="{{ csrf_token('delete_independent_age_action_' ~ a.uuid) }}">
                                                                 <button class="btn btn-sm btn-outline-danger">Delete</button>
@@ -126,19 +158,105 @@
         </div>
     </div>
 
-    <script>
-        document.addEventListener('DOMContentLoaded', function () {
-            document.querySelectorAll('.ia-toggle').forEach(function (btn) {
-                btn.addEventListener('click', function () {
-                    const id = btn.getAttribute('data-target');
-                    const row = document.getElementById(id);
-                    if (!row) return;
+    {# Shared modal for both View and Edit #}
+    <div class="modal fade" id="iaRecordModal" tabindex="-1" aria-hidden="true">
+        <div class="modal-dialog modal-lg modal-dialog-scrollable">
+            <div class="modal-content">
+                <div class="modal-header">
+                    <h5 class="modal-title" id="iaRecordModalTitle">Record</h5>
+                    <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
+                </div>
+                <div class="modal-body" id="iaRecordModalBody">
+                    <div class="text-muted">Loading…</div>
+                </div>
+            </div>
+        </div>
+    </div>
 
-                    const isHidden = row.classList.contains('d-none');
-                    row.classList.toggle('d-none');
-                    btn.setAttribute('aria-expanded', isHidden ? 'true' : 'false');
-                });
+    <script>
+        function initIndependentAgeToggles() {
+            document.addEventListener('click', function (e) {
+                const btn = e.target.closest('.ia-toggle');
+                if (!btn) return;
+
+                const id = btn.getAttribute('data-target');
+                const row = document.getElementById(id);
+                if (!row) return;
+
+                const willShow = row.classList.contains('d-none');
+                row.classList.toggle('d-none');
+                btn.setAttribute('aria-expanded', willShow ? 'true' : 'false');
+            }, { passive: true });
+        }
+
+        async function loadIntoModal(url, title) {
+            const titleEl = document.getElementById('iaRecordModalTitle');
+            const bodyEl = document.getElementById('iaRecordModalBody');
+
+            titleEl.textContent = title || 'Record';
+            bodyEl.innerHTML = '<div class="text-muted">Loading…</div>';
+
+            const res = await fetch(url, { headers: { 'X-Requested-With': 'XMLHttpRequest' } });
+            if (!res.ok) {
+                bodyEl.innerHTML = '<div class="alert alert-danger mb-0">Failed to load content.</div>';
+                return;
+            }
+
+            bodyEl.innerHTML = await res.text();
+        }
+
+        function initIndependentAgeRecordModals() {
+            document.addEventListener('click', function (e) {
+                const btn = e.target.closest('.ia-view, .ia-edit');
+                if (!btn) return;
+
+                const url = btn.getAttribute('data-url');
+                const title = btn.getAttribute('data-title') || 'Record';
+                if (!url) return;
+
+                loadIntoModal(url, title);
             });
+
+            document.addEventListener('submit', async function (e) {
+                const form = e.target.closest('#ia-edit-form');
+                if (!form) return;
+
+                e.preventDefault();
+
+                const bodyEl = document.getElementById('iaRecordModalBody');
+                const formData = new FormData(form);
+
+                const res = await fetch(form.action, {
+                    method: 'POST',
+                    headers: { 'X-Requested-With': 'XMLHttpRequest' },
+                    body: formData
+                });
+
+                const contentType = (res.headers.get('content-type') || '').toLowerCase();
+
+                if (contentType.includes('application/json')) {
+                    const data = await res.json();
+                    if (data && data.ok && data.redirect) {
+                        window.location.href = data.redirect;
+                        return;
+                    }
+                    bodyEl.innerHTML = '<div class="alert alert-danger mb-0">Unexpected response.</div>';
+                    return;
+                }
+
+                bodyEl.innerHTML = await res.text();
+            });
+        }
+
+        document.addEventListener('DOMContentLoaded', function () {
+            initIndependentAgeToggles();
+            initIndependentAgeRecordModals();
+        });
+
+        document.addEventListener('turbo:load', function () {
+            initIndependentAgeToggles();
+            initIndependentAgeRecordModals();
         });
     </script>
+
 {% endblock %}

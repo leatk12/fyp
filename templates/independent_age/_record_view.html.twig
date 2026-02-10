@@ -1,0 +1,71 @@
+<div class="table-responsive">
+    <table class="table table-sm mb-0">
+        <tbody>
+        <tr><th style="width: 220px;">UUID</th><td>{{ record.uuid }}</td></tr>
+        <tr><th>Date</th><td>{{ record.date ? record.date|date('Y-m-d') : '—' }}</td></tr>
+        <tr><th>Full name</th><td>{{ record.fullName }}</td></tr>
+        <tr><th>Age</th><td>{{ record.age }}</td></tr>
+        <tr><th>Gender</th><td>{{ record.gender ?: '—' }}</td></tr>
+        <tr><th>Heard about</th><td>{{ record.heardAbout ?: '—' }}</td></tr>
+
+        <tr><th>Street address</th><td>{{ record.streetAddress ?: '—' }}</td></tr>
+        <tr><th>Ward</th><td>{{ record.ward ?: '—' }}</td></tr>
+        <tr><th>Postcode</th><td>{{ record.postcode ?: '—' }}</td></tr>
+        <tr><th>Phone</th><td>{{ record.phone ?: '—' }}</td></tr>
+        <tr><th>Email</th><td>{{ record.email ?: '—' }}</td></tr>
+
+        <tr>
+            <th>Additional needs</th>
+            <td style="white-space: pre-wrap;">{{ record.additionalNeeds ?: '—' }}</td>
+        </tr>
+
+        <tr>
+            <th>Benefits</th>
+            <td>
+                {% set benefits = record.benefits ?? [] %}
+                {% if benefits is iterable and benefits|length > 0 %}
+                    {{ benefits|join(', ') }}
+                {% else %}
+                    —
+                {% endif %}
+            </td>
+        </tr>
+
+        <tr><th>Immigration status</th><td>{{ record.immigrationStatus ?: '—' }}</td></tr>
+        <tr>
+            <th>Describe status</th>
+            <td style="white-space: pre-wrap;">{{ record.statusDescribe ?: '—' }}</td>
+        </tr>
+
+        <tr>
+            <th>English first language</th>
+            <td>
+                {% if record.englishFirstLanguage is same as(true) %}
+                    Yes
+                {% elseif record.englishFirstLanguage is same as(false) %}
+                    No
+                {% else %}
+                    —
+                {% endif %}
+            </td>
+        </tr>
+
+        <tr><th>First language</th><td>{{ record.firstLanguage ?: '—' }}</td></tr>
+
+        <tr><th>Housing</th><td>{{ record.housing ?: '—' }}</td></tr>
+        <tr><th>Housing other</th><td>{{ record.housingOther ?: '—' }}</td></tr>
+
+        <tr>
+            <th>Permissions</th>
+            <td>
+                {% set perms = record.permissions ?? [] %}
+                {% if perms is iterable and perms|length > 0 %}
+                    {{ perms|join(', ') }}
+                {% else %}
+                    —
+                {% endif %}
+            </td>
+        </tr>
+        </tbody>
+    </table>
+</div>

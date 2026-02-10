@@ -7,6 +7,7 @@ use App\Form\IndependentAgeRecordType;
 use App\Repository\IndependentAgeRecordRepository;
 use Doctrine\ORM\EntityManagerInterface;
 use Symfony\Bundle\FrameworkBundle\Controller\AbstractController;
+use Symfony\Component\HttpFoundation\JsonResponse;
 use Symfony\Component\HttpFoundation\Request;
 use Symfony\Component\HttpFoundation\Response;
 use Symfony\Component\Routing\Annotation\Route;
@@ -15,12 +16,23 @@ use Symfony\Component\Routing\Annotation\Route;
 class IndependentAgeRecordController extends AbstractController
 {
     #[Route('/', name: 'app_independent_age_index', methods: ['GET'])]
-    public function index(IndependentAgeRecordRepository $repo): Response
+    public function index(Request $request, IndependentAgeRecordRepository $repo): Response
     {
-        $records = $repo->findAllWithActions();
+        $page  = max(1, (int) $request->query->get('page', 1));
+        $limit = (int) $request->query->get('limit', 50);
+        if ($limit < 1) { $limit = 50; }
+        if ($limit > 200) { $limit = 200; } // hard cap to avoid accidental "load the world"
+
+        $records = $repo->findPage($page, $limit);
+        $total   = $repo->countAllRecords();
+        $pages   = (int) max(1, (int) ceil($total / $limit));
 
         return $this->render('independent_age/index.html.twig', [
             'records' => $records,
+            'page'    => $page,
+            'limit'   => $limit,
+            'total'   => $total,
+            'pages'   => $pages,
         ]);
     }
 
@@ -28,7 +40,7 @@ class IndependentAgeRecordController extends AbstractController
     public function new(Request $request, EntityManagerInterface $em): Response
     {
         $record = new IndependentAgeRecord();
-        $record->setDate(new \DateTime()); // default to today
+        $record->setDate(new \DateTime());
 
         $form = $this->createForm(IndependentAgeRecordType::class, $record);
         $form->handleRequest($request);
@@ -53,5 +65,97 @@ class IndependentAgeRecordController extends AbstractController
         return $this->render('independent_age/new.html.twig', [
             'form' => $form->createView(),
         ]);
+    }
+
+    #[Route('/{uuid}/view', name: 'app_independent_age_view', methods: ['GET'])]
+    public function view(string $uuid, IndependentAgeRecordRepository $repo): Response
+    {
+        // For the modal, it’s fine (and usually desirable) to fetch the actions for this ONE record.
+        $record = $repo->findOneByUuidWithActions($uuid);
+
+        if (!$record) {
+            throw $this->createNotFoundException('Record not found.');
+        }
+
+        return $this->render('independent_age/_record_view.html.twig', [
+            'record' => $record,
+        ]);
+    }
+
+    #[Route('/{uuid}/edit', name: 'app_independent_age_edit', methods: ['GET','POST'])]
+    public function edit(
+        string $uuid,
+        IndependentAgeRecordRepository $repo,
+        Request $request,
+        EntityManagerInterface $em
+    ): Response {
+        $record = $repo->findOneByUuid($uuid);
+
+        if (!$record) {
+            throw $this->createNotFoundException('Record not found.');
+        }
+
+        $form = $this->createForm(IndependentAgeRecordType::class, $record);
+        $form->handleRequest($request);
+
+        if ($form->isSubmitted()) {
+            if ($record->isEnglishFirstLanguage() === true) {
+                $record->setFirstLanguage(null);
+            }
+            if ($record->getHousing() !== 'other') {
+                $record->setHousingOther(null);
+            }
+        }
+
+        if ($form->isSubmitted() && $form->isValid()) {
+            $em->flush();
+            $this->addFlash('success', 'Record updated.');
+
+            if ($request->isXmlHttpRequest()) {
+                return new JsonResponse([
+                    'ok' => true,
+                    'redirect' => $this->generateUrl('app_independent_age_index'),
+                ]);
+            }
+
+            return $this->redirectToRoute('app_independent_age_index');
+        }
+
+        if ($request->isXmlHttpRequest()) {
+            return $this->render('independent_age/_record_edit.html.twig', [
+                'record' => $record,
+                'form' => $form->createView(),
+            ]);
+        }
+
+        return $this->render('independent_age/edit.html.twig', [
+            'record' => $record,
+            'form' => $form->createView(),
+        ]);
+    }
+
+    #[Route('/{uuid}/delete', name: 'app_independent_age_delete', methods: ['POST'])]
+    public function delete(
+        string $uuid,
+        IndependentAgeRecordRepository $repo,
+        Request $request,
+        EntityManagerInterface $em
+    ): Response {
+        $record = $repo->findOneByUuid($uuid);
+
+        if (!$record) {
+            throw $this->createNotFoundException('Record not found.');
+        }
+
+        $token = (string) $request->request->get('_token', '');
+        if (!$this->isCsrfTokenValid('delete_independent_age_record_' . $uuid, $token)) {
+            throw $this->createAccessDeniedException('Invalid CSRF token.');
+        }
+
+        $em->remove($record);
+        $em->flush();
+
+        $this->addFlash('success', 'Record deleted.');
+        return $this->redirectToRoute('app_independent_age_index');
     }
 }
