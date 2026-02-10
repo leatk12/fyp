@@ -38,7 +38,7 @@
   Button that toggles the offcanvas sidebar.
 -->
 <button
-        class="offcanvas-btn"
+        class="offcanvas-btn no-print"
         type="button"
         data-bs-toggle="offcanvas"
         data-bs-target="#sidebarOffcanvas"
@@ -115,6 +115,13 @@
                 <a href="{{ path('app_customer_new') }}">Add Customer</a>
             </li>
             #}
+
+            <!-- Independent age -->
+            <li class="list-group-item fw-bold">Independent Age</li>
+            <li class="list-group-item">
+                <a href="{{ path('app_independent_age_index') }}">Monitoring Records</a>
+            </li>
+
         </ul>
     </div>
 </div>

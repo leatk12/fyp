@@ -89,3 +89,33 @@ body {
     -moz-user-select: none;
     -ms-user-select: none;
 }
+
+/* =========================
+   Print-specific overrides
+   ========================= */
+@media print {
+    /* Hide offcanvas UI and its backdrop */
+    .offcanvas-btn,
+    #sidebarOffcanvas,
+    .offcanvas-backdrop {
+        display: none !important;
+        visibility: hidden !important;
+    }
+
+    /* OPTIONAL: hide the top navbar in print.
+       Uncomment if you don't want the navbar printed. */
+    /* .navbar {
+        display: none !important;
+    } */
+
+    /* Use full width for content on paper */
+    .container,
+    .container-fluid {
+        max-width: 100% !important;
+        width: 100% !important;
+    }
+
+    /* Improve tables for printing */
+    table { page-break-inside: auto; }
+    tr, td, th { page-break-inside: avoid; break-inside: avoid; }
+}

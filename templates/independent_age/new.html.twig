@@ -1,0 +1,109 @@
+{% extends 'base.html.twig' %}
+
+{% block title %}Independent Age — New Record{% endblock %}
+
+{% block body %}
+    <div class="container mt-4">
+        <div class="d-flex justify-content-between align-items-center">
+            <h2 class="mb-0">Independent Age — New Record</h2>
+            <a href="{{ path('app_independent_age_index') }}" class="btn btn-outline-secondary">Back to list</a>
+        </div>
+
+        {% for label, messages in app.flashes %}
+            {% for message in messages %}
+                <div class="alert alert-{{ label }} mt-3">{{ message }}</div>
+            {% endfor %}
+        {% endfor %}
+
+        <div class="card mt-3">
+            <div class="card-body">
+                {{ form_start(form) }}
+
+                <h5 class="border-bottom pb-2 mb-3">Section 1</h5>
+                <div class="row g-3">
+                    <div class="col-md-3">{{ form_row(form.date) }}</div>
+                    <div class="col-md-5">{{ form_row(form.fullName) }}</div>
+                    <div class="col-md-2">{{ form_row(form.age) }}</div>
+                    <div class="col-md-2">{{ form_row(form.gender) }}</div>
+                </div>
+
+                <h5 class="border-bottom pb-2 mt-4 mb-3">Section 2</h5>
+                {{ form_row(form.heardAbout) }}
+
+                <h5 class="border-bottom pb-2 mt-4 mb-3">Section 3 — Address/Contact details</h5>
+                <div class="row g-3">
+                    <div class="col-md-8">{{ form_row(form.streetAddress) }}</div>
+                    <div class="col-md-4">{{ form_row(form.ward) }}</div>
+                    <div class="col-md-3">{{ form_row(form.postcode) }}</div>
+                    <div class="col-md-3">{{ form_row(form.phone) }}</div>
+                    <div class="col-md-6">{{ form_row(form.email) }}</div>
+                </div>
+
+                <h5 class="border-bottom pb-2 mt-4 mb-3">Section 4 — Additional needs</h5>
+                {{ form_row(form.additionalNeeds) }}
+
+                <h5 class="border-bottom pb-2 mt-4 mb-3">Section 5 — Benefits</h5>
+                <div class="row">
+                    <div class="col-12">
+                        {{ form_row(form.benefits) }}
+                    </div>
+                </div>
+
+                <h5 class="border-bottom pb-2 mt-4 mb-3">Section 6 — Immigration status</h5>
+                <div class="row g-3">
+                    <div class="col-md-6">{{ form_row(form.immigrationStatus) }}</div>
+                    <div class="col-md-6">{{ form_row(form.statusDescribe) }}</div>
+                </div>
+
+                <h5 class="border-bottom pb-2 mt-4 mb-3">Section 6 — Language</h5>
+                <div class="row g-3">
+                    <div class="col-md-4">{{ form_row(form.isEnglishFirstLanguage) }}</div>
+                    <div class="col-md-8">{{ form_row(form.firstLanguage) }}</div>
+                </div>
+
+                <h5 class="border-bottom pb-2 mt-4 mb-3">Section 7 — Housing</h5>
+                <div class="row g-3">
+                    <div class="col-md-8">{{ form_row(form.housing) }}</div>
+                    <div class="col-md-4">{{ form_row(form.housingOther) }}</div>
+                </div>
+
+                <h5 class="border-bottom pb-2 mt-4 mb-3">Section 8 — Permissions to contact</h5>
+                {{ form_row(form.permissions) }}
+
+                <div class="mt-4 d-flex justify-content-end gap-2">
+                    <a href="{{ path('app_independent_age_index') }}" class="btn btn-secondary">Cancel</a>
+                    <button class="btn btn-success">Save</button>
+                </div>
+
+                {{ form_end(form) }}
+            </div>
+        </div>
+    </div>
+
+    <script>
+        document.addEventListener('DOMContentLoaded', function() {
+            // Optional: simple client-side assist—hide/show firstLanguage depending on radio
+            const yesNo = document.querySelectorAll('[name="independent_age_record[isEnglishFirstLanguage]"]');
+            const firstLangWrap = document.querySelector('[for="independent_age_record_firstLanguage"]').closest('.mb-3') || null;
+            function toggleFirstLang() {
+                if (!firstLangWrap) return;
+                const checked = document.querySelector('[name="independent_age_record[isEnglishFirstLanguage]"]:checked');
+                if (!checked) return;
+                firstLangWrap.style.display = (checked.value === '0') ? '' : 'none';
+            }
+            yesNo.forEach(r => r.addEventListener('change', toggleFirstLang));
+            toggleFirstLang();
+
+            // Optional: show Other field only if "housing" == other
+            const housingInputs = document.querySelectorAll('[name="independent_age_record[housing]"]');
+            const housingOtherWrap = document.querySelector('[for="independent_age_record_housingOther"]').closest('.mb-3') || null;
+            function toggleHousingOther() {
+                if (!housingOtherWrap) return;
+                const checked = document.querySelector('[name="independent_age_record[housing]"]:checked');
+                housingOtherWrap.style.display = (checked && checked.value === 'other') ? '' : 'none';
+            }
+            housingInputs.forEach(i => i.addEventListener('change', toggleHousingOther));
+            toggleHousingOther();
+        });
+    </script>
+{% endblock %}

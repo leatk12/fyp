@@ -1,0 +1,39 @@
+{% extends 'base.html.twig' %}
+
+{% block title %}Independent Age — Edit Action{% endblock %}
+
+{% block body %}
+    <div class="container mt-4">
+        <div class="d-flex justify-content-between align-items-center">
+            <h2 class="mb-0">Edit Action</h2>
+            <a href="{{ path('app_independent_age_index') }}" class="btn btn-outline-secondary">Back to list</a>
+        </div>
+
+        {% for label, messages in app.flashes %}
+            {% for message in messages %}
+                <div class="alert alert-{{ label }} mt-3">{{ message }}</div>
+            {% endfor %}
+        {% endfor %}
+
+        <div class="card mt-3">
+            <div class="card-body">
+                <div class="mb-3">
+                    <div><strong>Customer:</strong> {{ record.fullName }}</div>
+                    <div class="text-muted small">Customer UUID: {{ record.uuid }}</div>
+                    <div class="text-muted small">Action UUID: {{ actionEntity.uuid }}</div>
+                </div>
+
+                {{ form_start(form) }}
+                {{ form_row(form.date) }}
+                {{ form_row(form.action) }}
+                {{ form_row(form.outcome) }}
+
+                <div class="mt-4 d-flex justify-content-end gap-2">
+                    <a href="{{ path('app_independent_age_index') }}" class="btn btn-secondary">Cancel</a>
+                    <button class="btn btn-success">Save</button>
+                </div>
+                {{ form_end(form) }}
+            </div>
+        </div>
+    </div>
+{% endblock %}
