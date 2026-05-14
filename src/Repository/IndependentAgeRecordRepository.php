@@ -30,10 +30,6 @@ class IndependentAgeRecordRepository extends ServiceEntityRepository
             ->getOneOrNullResult();
     }
 
-    /**
-     * Fetch a single record AND its actions for the modal/detail view.
-     * This is safe because it’s bounded to one parent record.
-     */
     public function findOneByUuidWithActions(string $uuid): ?IndependentAgeRecord
     {
         return $this->createQueryBuilder('r')
@@ -49,29 +45,45 @@ class IndependentAgeRecordRepository extends ServiceEntityRepository
             ->getOneOrNullResult();
     }
 
-    /**
-     * Paginated records list WITHOUT joining actions.
-     * Prevents the “load everything + join everything” 120s timeout.
-     */
     public function findPage(int $page, int $limit): array
     {
-        $page = max(1, $page);
-        $limit = max(1, $limit);
-
-        return $this->createQueryBuilder('r')
-            ->orderBy('r.date', 'DESC')
-            ->addOrderBy('r.id', 'DESC')
-            ->setFirstResult(($page - 1) * $limit)
-            ->setMaxResults($limit)
-            ->getQuery()
-            ->getResult();
+        return $this->findPageSearchByFullName($page, $limit, '');
     }
 
     public function countAllRecords(): int
     {
-        return (int) $this->createQueryBuilder('r')
-            ->select('COUNT(r.id)')
-            ->getQuery()
-            ->getSingleScalarResult();
+        return $this->countSearchByFullName('');
+    }
+
+    public function findPageSearchByFullName(int $page, int $limit, string $q): array
+    {
+        $page = max(1, $page);
+        $limit = max(1, $limit);
+
+        $qb = $this->createQueryBuilder('r')
+            ->orderBy('r.date', 'DESC')
+            ->addOrderBy('r.id', 'DESC')
+            ->setFirstResult(($page - 1) * $limit)
+            ->setMaxResults($limit);
+
+        if ($q !== '') {
+            $qb->andWhere('LOWER(r.fullName) LIKE :q')
+                ->setParameter('q', '%' . mb_strtolower($q) . '%');
+        }
+
+        return $qb->getQuery()->getResult();
+    }
+
+    public function countSearchByFullName(string $q): int
+    {
+        $qb = $this->createQueryBuilder('r')
+            ->select('COUNT(r.id)');
+
+        if ($q !== '') {
+            $qb->andWhere('LOWER(r.fullName) LIKE :q')
+                ->setParameter('q', '%' . mb_strtolower($q) . '%');
+        }
+
+        return (int) $qb->getQuery()->getSingleScalarResult();
     }
 }
