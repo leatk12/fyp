@@ -18,6 +18,23 @@
             {% endfor %}
         {% endfor %}
 
+        <form method="get" action="{{ path('app_independent_age_index') }}" class="mt-3">
+            <div class="input-group">
+                <input
+                        type="text"
+                        name="q"
+                        value="{{ q ?? '' }}"
+                        class="form-control"
+                        placeholder="Search by customer name"
+                >
+                <button class="btn btn-outline-primary">Search</button>
+
+                {% if q is defined and q %}
+                    <a href="{{ path('app_independent_age_index') }}" class="btn btn-outline-secondary">Clear</a>
+                {% endif %}
+            </div>
+        </form>
+
         <div class="table-responsive mt-3">
             <table class="table table-sm table-striped align-middle">
                 <thead>
@@ -167,37 +184,50 @@
                         </td>
                     </tr>
                 {% else %}
-                    <tr><td colspan="7" class="text-muted">No records yet.</td></tr>
+                    <tr>
+                        <td colspan="7" class="text-muted">
+                            {% if q is defined and q %}
+                                No records found matching "{{ q }}".
+                            {% else %}
+                                No records yet.
+                            {% endif %}
+                        </td>
+                    </tr>
                 {% endfor %}
                 </tbody>
             </table>
         </div>
     </div>
+
     {% if pages > 1 %}
         <nav class="mt-3" aria-label="Independent Age records pagination">
             <ul class="pagination justify-content-center">
 
                 <li class="page-item {{ page <= 1 ? 'disabled' : '' }}">
-                    <a class="page-link" href="{{ path('app_independent_age_index', { page: page - 1 }) }}">Previous</a>
+                    <a class="page-link" href="{{ path('app_independent_age_index', { page: page - 1, q: q }) }}">Previous</a>
                 </li>
 
                 {% for p in 1..pages %}
                     <li class="page-item {{ p == page ? 'active' : '' }}">
-                        <a class="page-link" href="{{ path('app_independent_age_index', { page: p }) }}">{{ p }}</a>
+                        <a class="page-link" href="{{ path('app_independent_age_index', { page: p, q: q }) }}">{{ p }}</a>
                     </li>
                 {% endfor %}
 
                 <li class="page-item {{ page >= pages ? 'disabled' : '' }}">
-                    <a class="page-link" href="{{ path('app_independent_age_index', { page: page + 1 }) }}">Next</a>
+                    <a class="page-link" href="{{ path('app_independent_age_index', { page: page + 1, q: q }) }}">Next</a>
                 </li>
 
             </ul>
         </nav>
-
-        <div class="text-center text-muted small">
-            Showing {{ records|length }} of {{ total }} records — page {{ page }} of {{ pages }}
-        </div>
     {% endif %}
+
+    <div class="text-center text-muted small">
+        Showing {{ records|length }} of {{ total }} records
+        {% if q is defined and q %}
+            matching "{{ q }}"
+        {% endif %}
+        — page {{ page }} of {{ pages }}
+    </div>
 
     {# Shared modal for both View and Edit #}
     <div class="modal fade" id="iaRecordModal" tabindex="-1" aria-hidden="true">

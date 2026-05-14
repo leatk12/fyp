@@ -20,15 +20,16 @@ class IndependentAgeRecordController extends AbstractController
     {
         $page = max(1, (int) $request->query->get('page', 1));
         $limit = 20;
+        $q = trim((string) $request->query->get('q', ''));
 
-        $total = $repo->countAllRecords();
+        $total = $repo->countSearchByFullName($q);
         $pages = (int) max(1, ceil($total / $limit));
 
         if ($page > $pages) {
             $page = $pages;
         }
 
-        $records = $repo->findPage($page, $limit);
+        $records = $repo->findPageSearchByFullName($page, $limit, $q);
 
         return $this->render('independent_age/index.html.twig', [
             'records' => $records,
@@ -36,6 +37,7 @@ class IndependentAgeRecordController extends AbstractController
             'limit'   => $limit,
             'total'   => $total,
             'pages'   => $pages,
+            'q'       => $q,
         ]);
     }
 
