@@ -4,6 +4,7 @@ namespace App\Form;
 
 use App\Entity\IndependentAgeRecord;
 use Symfony\Component\Form\AbstractType;
+use Symfony\Component\Form\Extension\Core\Type\CheckboxType;
 use Symfony\Component\Form\Extension\Core\Type\ChoiceType;
 use Symfony\Component\Form\Extension\Core\Type\DateType;
 use Symfony\Component\Form\Extension\Core\Type\EmailType;
@@ -19,7 +20,6 @@ class IndependentAgeRecordType extends AbstractType
     public function buildForm(FormBuilderInterface $builder, array $options): void
     {
         $builder
-            // Section 1
             ->add('date', DateType::class, [
                 'widget' => 'single_text',
                 'label'  => 'Date',
@@ -36,16 +36,12 @@ class IndependentAgeRecordType extends AbstractType
                 'required' => false,
                 'placeholder' => 'Select…',
             ])
-
-            // Section 2
             ->add('heardAbout', ChoiceType::class, [
                 'label' => 'How did you hear about us?',
                 'choices' => IndependentAgeRecord::HEAR_ABOUT_CHOICES,
                 'placeholder' => 'Select…',
                 'required' => false,
             ])
-
-            // Section 3
             ->add('streetAddress', TextType::class, [
                 'label' => 'Street Address',
                 'required' => false,
@@ -66,15 +62,11 @@ class IndependentAgeRecordType extends AbstractType
                 'label' => 'Email',
                 'required' => false,
             ])
-
-            // Section 4
             ->add('additionalNeeds', TextareaType::class, [
                 'label' => 'Additional needs',
                 'required' => false,
                 'attr' => ['rows' => 4],
             ])
-
-            // Section 5
             ->add('benefits', ChoiceType::class, [
                 'label' => 'Do you receive any of the following?',
                 'choices' => IndependentAgeRecord::BENEFIT_CHOICES,
@@ -82,8 +74,6 @@ class IndependentAgeRecordType extends AbstractType
                 'multiple' => true,
                 'required' => false,
             ])
-
-            // Section 6
             ->add('immigrationStatus', ChoiceType::class, [
                 'label' => 'Immigration status',
                 'choices' => IndependentAgeRecord::IMMIGRATION_CHOICES,
@@ -95,8 +85,6 @@ class IndependentAgeRecordType extends AbstractType
                 'required' => false,
                 'attr' => ['rows' => 3],
             ])
-
-            // Section 6b - Language
             ->add('isEnglishFirstLanguage', ChoiceType::class, [
                 'label' => 'Is English your first language?',
                 'choices' => [
@@ -111,8 +99,6 @@ class IndependentAgeRecordType extends AbstractType
                 'label' => 'No, my first language is',
                 'required' => false,
             ])
-
-            // Section 7 - Housing
             ->add('housing', ChoiceType::class, [
                 'label' => 'Housing',
                 'choices' => IndependentAgeRecord::HOUSING_CHOICES,
@@ -124,8 +110,14 @@ class IndependentAgeRecordType extends AbstractType
                 'label' => 'If Other, please specify',
                 'required' => false,
             ])
-
-            // Section 8 - Permissions
+            ->add('caringResponsibilities', CheckboxType::class, [
+                'label' => 'Caring responsibilities',
+                'required' => false,
+            ])
+            ->add('longTermConditionDisability', CheckboxType::class, [
+                'label' => 'Living with long term condition/disability',
+                'required' => false,
+            ])
             ->add('permissions', ChoiceType::class, [
                 'label' => 'Permissions to contact',
                 'choices' => IndependentAgeRecord::PERMISSION_CHOICES,

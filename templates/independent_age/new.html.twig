@@ -67,6 +67,12 @@
                     <div class="col-md-4">{{ form_row(form.housingOther) }}</div>
                 </div>
 
+                <h5 class="border-bottom pb-2 mt-4 mb-3">Caring and Health</h5>
+                <div class="row g-3">
+                    <div class="col-md-6">{{ form_row(form.caringResponsibilities) }}</div>
+                    <div class="col-md-6">{{ form_row(form.longTermConditionDisability) }}</div>
+                </div>
+
                 <h5 class="border-bottom pb-2 mt-4 mb-3">Section 8 — Permissions to contact</h5>
                 {{ form_row(form.permissions) }}
 
@@ -82,26 +88,30 @@
 
     <script>
         document.addEventListener('DOMContentLoaded', function() {
-            // Optional: simple client-side assist—hide/show firstLanguage depending on radio
             const yesNo = document.querySelectorAll('[name="independent_age_record[isEnglishFirstLanguage]"]');
-            const firstLangWrap = document.querySelector('[for="independent_age_record_firstLanguage"]').closest('.mb-3') || null;
+            const firstLangLabel = document.querySelector('[for="independent_age_record_firstLanguage"]');
+            const firstLangWrap = firstLangLabel ? firstLangLabel.closest('.mb-3') : null;
+
             function toggleFirstLang() {
                 if (!firstLangWrap) return;
                 const checked = document.querySelector('[name="independent_age_record[isEnglishFirstLanguage]"]:checked');
                 if (!checked) return;
                 firstLangWrap.style.display = (checked.value === '0') ? '' : 'none';
             }
+
             yesNo.forEach(r => r.addEventListener('change', toggleFirstLang));
             toggleFirstLang();
 
-            // Optional: show Other field only if "housing" == other
             const housingInputs = document.querySelectorAll('[name="independent_age_record[housing]"]');
-            const housingOtherWrap = document.querySelector('[for="independent_age_record_housingOther"]').closest('.mb-3') || null;
+            const housingOtherLabel = document.querySelector('[for="independent_age_record_housingOther"]');
+            const housingOtherWrap = housingOtherLabel ? housingOtherLabel.closest('.mb-3') : null;
+
             function toggleHousingOther() {
                 if (!housingOtherWrap) return;
                 const checked = document.querySelector('[name="independent_age_record[housing]"]:checked');
                 housingOtherWrap.style.display = (checked && checked.value === 'other') ? '' : 'none';
             }
+
             housingInputs.forEach(i => i.addEventListener('change', toggleHousingOther));
             toggleHousingOther();
         });
