@@ -118,6 +118,16 @@ class IndependentAgeRecordType extends AbstractType
                 'label' => 'Living with long term condition/disability',
                 'required' => false,
             ])
+            ->add('ethnicity', ChoiceType::class, [
+                'label' => 'Ethnicity',
+                'choices' => IndependentAgeRecord::ETHNICITY_CHOICES,
+                'placeholder' => 'Select…',
+                'required' => false,
+            ])
+            ->add('ethnicityOther', TextType::class, [
+                'label' => 'Any other ethnic group description',
+                'required' => false,
+            ])
             ->add('permissions', ChoiceType::class, [
                 'label' => 'Permissions to contact',
                 'choices' => IndependentAgeRecord::PERMISSION_CHOICES,

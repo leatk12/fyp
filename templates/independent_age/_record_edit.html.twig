@@ -3,7 +3,68 @@
     attr: { id: 'ia-edit-form' }
 }) }}
 
-    {{ form_widget(form) }}
+<h5 class="border-bottom pb-2 mb-3">Section 1</h5>
+<div class="row g-3">
+    <div class="col-md-3">{{ form_row(form.date) }}</div>
+    <div class="col-md-5">{{ form_row(form.fullName) }}</div>
+    <div class="col-md-2">{{ form_row(form.age) }}</div>
+    <div class="col-md-2">{{ form_row(form.gender) }}</div>
+</div>
+
+<h5 class="border-bottom pb-2 mt-4 mb-3">Section 2</h5>
+{{ form_row(form.heardAbout) }}
+
+<h5 class="border-bottom pb-2 mt-4 mb-3">Section 3 — Address/Contact details</h5>
+<div class="row g-3">
+    <div class="col-md-8">{{ form_row(form.streetAddress) }}</div>
+    <div class="col-md-4">{{ form_row(form.ward) }}</div>
+    <div class="col-md-3">{{ form_row(form.postcode) }}</div>
+    <div class="col-md-3">{{ form_row(form.phone) }}</div>
+    <div class="col-md-6">{{ form_row(form.email) }}</div>
+</div>
+
+<h5 class="border-bottom pb-2 mt-4 mb-3">Section 4 — Additional needs</h5>
+{{ form_row(form.additionalNeeds) }}
+
+<h5 class="border-bottom pb-2 mt-4 mb-3">Section 5 — Benefits</h5>
+<div class="row">
+    <div class="col-12">
+        {{ form_row(form.benefits) }}
+    </div>
+</div>
+
+<h5 class="border-bottom pb-2 mt-4 mb-3">Section 6 — Immigration status</h5>
+<div class="row g-3">
+    <div class="col-md-6">{{ form_row(form.immigrationStatus) }}</div>
+    <div class="col-md-6">{{ form_row(form.statusDescribe) }}</div>
+</div>
+
+<h5 class="border-bottom pb-2 mt-4 mb-3">Section 6 — Language</h5>
+<div class="row g-3">
+    <div class="col-md-4">{{ form_row(form.isEnglishFirstLanguage) }}</div>
+    <div class="col-md-8">{{ form_row(form.firstLanguage) }}</div>
+</div>
+
+<h5 class="border-bottom pb-2 mt-4 mb-3">Section 7 — Housing</h5>
+<div class="row g-3">
+    <div class="col-md-8">{{ form_row(form.housing) }}</div>
+    <div class="col-md-4">{{ form_row(form.housingOther) }}</div>
+</div>
+
+<h5 class="border-bottom pb-2 mt-4 mb-3">Caring and Health</h5>
+<div class="row g-3">
+    <div class="col-md-6">{{ form_row(form.caringResponsibilities) }}</div>
+    <div class="col-md-6">{{ form_row(form.longTermConditionDisability) }}</div>
+</div>
+
+<h5 class="border-bottom pb-2 mt-4 mb-3">Ethnicity</h5>
+<div class="row g-3">
+    <div class="col-md-8">{{ form_row(form.ethnicity) }}</div>
+    <div class="col-md-4">{{ form_row(form.ethnicityOther) }}</div>
+</div>
+
+<h5 class="border-bottom pb-2 mt-4 mb-3">Section 8 — Permissions to contact</h5>
+{{ form_row(form.permissions) }}
 
 <div class="d-flex justify-content-end gap-2 mt-3">
     <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Cancel</button>
@@ -11,3 +72,51 @@
 </div>
 
 {{ form_end(form) }}
+
+<script>
+    (function () {
+        const form = document.getElementById('ia-edit-form');
+        if (!form) return;
+
+        const yesNo = form.querySelectorAll('[name="independent_age_record[isEnglishFirstLanguage]"]');
+        const firstLangLabel = form.querySelector('[for="independent_age_record_firstLanguage"]');
+        const firstLangWrap = firstLangLabel ? firstLangLabel.closest('.mb-3') : null;
+
+        function toggleFirstLang() {
+            if (!firstLangWrap) return;
+            const checked = form.querySelector('[name="independent_age_record[isEnglishFirstLanguage]"]:checked');
+            if (!checked) return;
+            firstLangWrap.style.display = checked.value === '0' ? '' : 'none';
+        }
+
+        yesNo.forEach(r => r.addEventListener('change', toggleFirstLang));
+        toggleFirstLang();
+
+        const housingInputs = form.querySelectorAll('[name="independent_age_record[housing]"]');
+        const housingOtherLabel = form.querySelector('[for="independent_age_record_housingOther"]');
+        const housingOtherWrap = housingOtherLabel ? housingOtherLabel.closest('.mb-3') : null;
+
+        function toggleHousingOther() {
+            if (!housingOtherWrap) return;
+            const checked = form.querySelector('[name="independent_age_record[housing]"]:checked');
+            housingOtherWrap.style.display = checked && checked.value === 'other' ? '' : 'none';
+        }
+
+        housingInputs.forEach(i => i.addEventListener('change', toggleHousingOther));
+        toggleHousingOther();
+
+        const ethnicitySelect = form.querySelector('[name="independent_age_record[ethnicity]"]');
+        const ethnicityOtherLabel = form.querySelector('[for="independent_age_record_ethnicityOther"]');
+        const ethnicityOtherWrap = ethnicityOtherLabel ? ethnicityOtherLabel.closest('.mb-3') : null;
+
+        function toggleEthnicityOther() {
+            if (!ethnicityOtherWrap || !ethnicitySelect) return;
+            ethnicityOtherWrap.style.display = ethnicitySelect.value === 'other_ethnic_group' ? '' : 'none';
+        }
+
+        if (ethnicitySelect) {
+            ethnicitySelect.addEventListener('change', toggleEthnicityOther);
+            toggleEthnicityOther();
+        }
+    })();
+</script>

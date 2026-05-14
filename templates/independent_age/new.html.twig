@@ -73,6 +73,12 @@
                     <div class="col-md-6">{{ form_row(form.longTermConditionDisability) }}</div>
                 </div>
 
+                <h5 class="border-bottom pb-2 mt-4 mb-3">Ethnicity</h5>
+                <div class="row g-3">
+                    <div class="col-md-8">{{ form_row(form.ethnicity) }}</div>
+                    <div class="col-md-4">{{ form_row(form.ethnicityOther) }}</div>
+                </div>
+
                 <h5 class="border-bottom pb-2 mt-4 mb-3">Section 8 — Permissions to contact</h5>
                 {{ form_row(form.permissions) }}
 
@@ -114,6 +120,20 @@
 
             housingInputs.forEach(i => i.addEventListener('change', toggleHousingOther));
             toggleHousingOther();
+
+            const ethnicitySelect = document.querySelector('[name="independent_age_record[ethnicity]"]');
+            const ethnicityOtherLabel = document.querySelector('[for="independent_age_record_ethnicityOther"]');
+            const ethnicityOtherWrap = ethnicityOtherLabel ? ethnicityOtherLabel.closest('.mb-3') : null;
+
+            function toggleEthnicityOther() {
+                if (!ethnicityOtherWrap || !ethnicitySelect) return;
+                ethnicityOtherWrap.style.display = ethnicitySelect.value === 'other_ethnic_group' ? '' : 'none';
+            }
+
+            if (ethnicitySelect) {
+                ethnicitySelect.addEventListener('change', toggleEthnicityOther);
+                toggleEthnicityOther();
+            }
         });
     </script>
 {% endblock %}

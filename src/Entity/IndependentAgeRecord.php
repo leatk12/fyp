@@ -67,6 +67,32 @@ class IndependentAgeRecord
         'Other' => 'other',
     ];
 
+    public const ETHNICITY_CHOICES = [
+        'Arab' => 'arab',
+        'Asian, Asian British or Asian Welsh: Bangladeshi' => 'asian_bangladeshi',
+        'Asian, Asian British or Asian Welsh: Chinese' => 'asian_chinese',
+        'Asian, Asian British or Asian Welsh: Indian' => 'asian_indian',
+        'Asian, Asian British or Asian Welsh: Pakistani' => 'asian_pakistani',
+        'Asian, Asian British or Asian Welsh: Other Asian' => 'asian_other',
+        'Black, Black British, Black Welsh, Caribbean or African: Caribbean' => 'black_caribbean',
+        'Black, Black British, Black Welsh, Caribbean or African: African' => 'black_african',
+        'Black, Black British, Black Welsh, Caribbean or African: Other Black' => 'black_other',
+        'Latin American: Indigenous/Andean/With Indigenous heritage from Abya Yala' => 'latin_indigenous',
+        'Latin American: Mestizo/Mixed Latin American' => 'latin_mestizo',
+        'Mixed or Multiple ethnic groups: White and Asian' => 'mixed_white_asian',
+        'Mixed or Multiple ethnic groups: White and Black African' => 'mixed_white_black_african',
+        'Mixed or Multiple Ethnic groups: Other Mixed or Multiple Ethnic groups' => 'mixed_other',
+        'White: English, Welsh, Scottish, Northern Irish or British' => 'white_british',
+        'White: Eastern European' => 'white_eastern_european',
+        'White: Irish' => 'white_irish',
+        'White: Gypsy or Irish Traveller' => 'white_gypsy_traveller',
+        'White: Roma' => 'white_roma',
+        'White: Other' => 'white_other',
+        'Any other ethnic group' => 'other_ethnic_group',
+        'Prefer not to say/Did not disclose' => 'prefer_not_to_say',
+        'Not known' => 'not_known',
+    ];
+
     public const PERMISSION_CHOICES = [
         'Email' => 'email',
         'Text message' => 'text_message',
@@ -154,6 +180,12 @@ class IndependentAgeRecord
     #[ORM\Column(nullable: true)]
     private ?bool $longTermConditionDisability = null;
 
+    #[ORM\Column(length: 100, nullable: true)]
+    private ?string $ethnicity = null;
+
+    #[ORM\Column(length: 255, nullable: true)]
+    private ?string $ethnicityOther = null;
+
     #[ORM\Column(type: Types::JSON, nullable: true)]
     private ?array $permissions = [];
 
@@ -229,6 +261,12 @@ class IndependentAgeRecord
     public function hasLongTermConditionDisability(): ?bool { return $this->longTermConditionDisability; }
     public function setLongTermConditionDisability(?bool $longTermConditionDisability): self { $this->longTermConditionDisability = $longTermConditionDisability; return $this; }
 
+    public function getEthnicity(): ?string { return $this->ethnicity; }
+    public function setEthnicity(?string $ethnicity): self { $this->ethnicity = $ethnicity; return $this; }
+
+    public function getEthnicityOther(): ?string { return $this->ethnicityOther; }
+    public function setEthnicityOther(?string $ethnicityOther): self { $this->ethnicityOther = $ethnicityOther; return $this; }
+
     public function getPermissions(): ?array { return $this->permissions; }
     public function setPermissions(?array $permissions): self { $this->permissions = $permissions ?? []; return $this; }
 
@@ -246,6 +284,7 @@ class IndependentAgeRecord
             $this->actions->add($action);
             $action->setRecord($this);
         }
+
         return $this;
     }
 
@@ -256,6 +295,7 @@ class IndependentAgeRecord
                 $action->setRecord(null);
             }
         }
+
         return $this;
     }
 }

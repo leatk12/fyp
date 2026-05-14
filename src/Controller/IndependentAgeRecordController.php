@@ -20,8 +20,14 @@ class IndependentAgeRecordController extends AbstractController
     {
         $page  = max(1, (int) $request->query->get('page', 1));
         $limit = (int) $request->query->get('limit', 50);
-        if ($limit < 1) { $limit = 50; }
-        if ($limit > 200) { $limit = 200; } // hard cap to avoid accidental "load the world"
+
+        if ($limit < 1) {
+            $limit = 50;
+        }
+
+        if ($limit > 200) {
+            $limit = 200;
+        }
 
         $records = $repo->findPage($page, $limit);
         $total   = $repo->countAllRecords();
@@ -36,7 +42,7 @@ class IndependentAgeRecordController extends AbstractController
         ]);
     }
 
-    #[Route('/new', name: 'app_independent_age_new', methods: ['GET','POST'])]
+    #[Route('/new', name: 'app_independent_age_new', methods: ['GET', 'POST'])]
     public function new(Request $request, EntityManagerInterface $em): Response
     {
         $record = new IndependentAgeRecord();
@@ -46,12 +52,7 @@ class IndependentAgeRecordController extends AbstractController
         $form->handleRequest($request);
 
         if ($form->isSubmitted()) {
-            if ($record->isEnglishFirstLanguage() === true) {
-                $record->setFirstLanguage(null);
-            }
-            if ($record->getHousing() !== 'other') {
-                $record->setHousingOther(null);
-            }
+            $this->normaliseConditionalFields($record);
         }
 
         if ($form->isSubmitted() && $form->isValid()) {
@@ -70,7 +71,6 @@ class IndependentAgeRecordController extends AbstractController
     #[Route('/{uuid}/view', name: 'app_independent_age_view', methods: ['GET'])]
     public function view(string $uuid, IndependentAgeRecordRepository $repo): Response
     {
-        // For the modal, it’s fine (and usually desirable) to fetch the actions for this ONE record.
         $record = $repo->findOneByUuidWithActions($uuid);
 
         if (!$record) {
@@ -82,7 +82,7 @@ class IndependentAgeRecordController extends AbstractController
         ]);
     }
 
-    #[Route('/{uuid}/edit', name: 'app_independent_age_edit', methods: ['GET','POST'])]
+    #[Route('/{uuid}/edit', name: 'app_independent_age_edit', methods: ['GET', 'POST'])]
     public function edit(
         string $uuid,
         IndependentAgeRecordRepository $repo,
@@ -99,12 +99,7 @@ class IndependentAgeRecordController extends AbstractController
         $form->handleRequest($request);
 
         if ($form->isSubmitted()) {
-            if ($record->isEnglishFirstLanguage() === true) {
-                $record->setFirstLanguage(null);
-            }
-            if ($record->getHousing() !== 'other') {
-                $record->setHousingOther(null);
-            }
+            $this->normaliseConditionalFields($record);
         }
 
         if ($form->isSubmitted() && $form->isValid()) {
@@ -148,6 +143,7 @@ class IndependentAgeRecordController extends AbstractController
         }
 
         $token = (string) $request->request->get('_token', '');
+
         if (!$this->isCsrfTokenValid('delete_independent_age_record_' . $uuid, $token)) {
             throw $this->createAccessDeniedException('Invalid CSRF token.');
         }
@@ -157,5 +153,20 @@ class IndependentAgeRecordController extends AbstractController
 
         $this->addFlash('success', 'Record deleted.');
         return $this->redirectToRoute('app_independent_age_index');
+    }
+
+    private function normaliseConditionalFields(IndependentAgeRecord $record): void
+    {
+        if ($record->isEnglishFirstLanguage() === true) {
+            $record->setFirstLanguage(null);
+        }
+
+        if ($record->getHousing() !== 'other') {
+            $record->setHousingOther(null);
+        }
+
+        if ($record->getEthnicity() !== 'other_ethnic_group') {
+            $record->setEthnicityOther(null);
+        }
     }
 }
