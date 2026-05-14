@@ -54,7 +54,12 @@ class IndependentAgeRecord
     public const HOUSING_CHOICES = [
         'Private renting' => 'private_renting',
         'Great places' => 'great_places',
-        'One Manchester' => 'one_manchester',
+        'Social Housing' => 'one_manchester',
+        'Living alone' => 'living_alone',
+        'Homeless' => 'homeless',
+        'Own home with mortgage' => 'own_home_with_mortgage',
+        'Own home outright' => 'own_home_outright',
+        'Own home mortgage unknown' => 'own_home_mortgage_unknown',
         'Home owner' => 'home_owner',
         'Live with family' => 'live_with_family',
         'Temporary Accommodation' => 'temporary_accommodation',
@@ -70,7 +75,6 @@ class IndependentAgeRecord
 
     public function __construct()
     {
-        // store UUID as string (CHAR(36) in MySQL)
         $this->uuid = Uuid::v4()->toRfc4122();
         $this->actions = new ArrayCollection();
         $this->benefits = [];
@@ -85,7 +89,6 @@ class IndependentAgeRecord
     #[ORM\Column(length: 36, unique: true)]
     private ?string $uuid = null;
 
-    // Section 1
     #[ORM\Column(type: Types::DATE_MUTABLE)]
     #[Assert\NotNull]
     private ?\DateTimeInterface $date = null;
@@ -102,11 +105,9 @@ class IndependentAgeRecord
     #[ORM\Column(length: 20, nullable: true)]
     private ?string $gender = null;
 
-    // Section 2
     #[ORM\Column(length: 40, nullable: true)]
     private ?string $heardAbout = null;
 
-    // Section 3
     #[ORM\Column(length: 255, nullable: true)]
     private ?string $streetAddress = null;
 
@@ -123,36 +124,36 @@ class IndependentAgeRecord
     #[Assert\Email(allowNull: true)]
     private ?string $email = null;
 
-    // Section 4
     #[ORM\Column(type: Types::TEXT, nullable: true)]
     private ?string $additionalNeeds = null;
 
-    // Section 5
     #[ORM\Column(type: Types::JSON, nullable: true)]
     private ?array $benefits = [];
 
-    // Section 6
     #[ORM\Column(length: 40, nullable: true)]
     private ?string $immigrationStatus = null;
 
     #[ORM\Column(type: Types::TEXT, nullable: true)]
     private ?string $statusDescribe = null;
 
-    // Section 6b
     #[ORM\Column(nullable: true)]
     private ?bool $isEnglishFirstLanguage = null;
 
     #[ORM\Column(length: 120, nullable: true)]
     private ?string $firstLanguage = null;
 
-    // Section 7
     #[ORM\Column(length: 40, nullable: true)]
     private ?string $housing = null;
 
     #[ORM\Column(length: 255, nullable: true)]
     private ?string $housingOther = null;
 
-    // Section 8
+    #[ORM\Column(nullable: true)]
+    private ?bool $caringResponsibilities = null;
+
+    #[ORM\Column(nullable: true)]
+    private ?bool $longTermConditionDisability = null;
+
     #[ORM\Column(type: Types::JSON, nullable: true)]
     private ?array $permissions = [];
 
@@ -221,6 +222,12 @@ class IndependentAgeRecord
 
     public function getHousingOther(): ?string { return $this->housingOther; }
     public function setHousingOther(?string $housingOther): self { $this->housingOther = $housingOther; return $this; }
+
+    public function hasCaringResponsibilities(): ?bool { return $this->caringResponsibilities; }
+    public function setCaringResponsibilities(?bool $caringResponsibilities): self { $this->caringResponsibilities = $caringResponsibilities; return $this; }
+
+    public function hasLongTermConditionDisability(): ?bool { return $this->longTermConditionDisability; }
+    public function setLongTermConditionDisability(?bool $longTermConditionDisability): self { $this->longTermConditionDisability = $longTermConditionDisability; return $this; }
 
     public function getPermissions(): ?array { return $this->permissions; }
     public function setPermissions(?array $permissions): self { $this->permissions = $permissions ?? []; return $this; }
