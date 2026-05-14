@@ -52,7 +52,23 @@
                         <td>{{ r.age }}</td>
                         <td>{{ r.heardAbout }}</td>
                         <td>
-                            {{ r.housing }}
+                            {% set housingLabels = {
+                                'private_renting': 'Private renting',
+                                'great_places': 'Great places',
+                                'one_manchester': 'Social Housing',
+                                'living_alone': 'Living alone',
+                                'homeless': 'Homeless',
+                                'own_home_with_mortgage': 'Own home with mortgage',
+                                'own_home_outright': 'Own home outright',
+                                'own_home_mortgage_unknown': 'Own home mortgage unknown',
+                                'home_owner': 'Home owner',
+                                'live_with_family': 'Live with family',
+                                'temporary_accommodation': 'Temporary Accommodation',
+                                'supported_retirement': 'Supported/Retirement Living',
+                                'other': 'Other'
+                            } %}
+
+                            {{ housingLabels[r.housing] ?? r.housing }}
                             {% if r.housing == 'other' and r.housingOther %}
                                 <small class="text-muted">— {{ r.housingOther }}</small>
                             {% endif %}
@@ -157,6 +173,31 @@
             </table>
         </div>
     </div>
+    {% if pages > 1 %}
+        <nav class="mt-3" aria-label="Independent Age records pagination">
+            <ul class="pagination justify-content-center">
+
+                <li class="page-item {{ page <= 1 ? 'disabled' : '' }}">
+                    <a class="page-link" href="{{ path('app_independent_age_index', { page: page - 1 }) }}">Previous</a>
+                </li>
+
+                {% for p in 1..pages %}
+                    <li class="page-item {{ p == page ? 'active' : '' }}">
+                        <a class="page-link" href="{{ path('app_independent_age_index', { page: p }) }}">{{ p }}</a>
+                    </li>
+                {% endfor %}
+
+                <li class="page-item {{ page >= pages ? 'disabled' : '' }}">
+                    <a class="page-link" href="{{ path('app_independent_age_index', { page: page + 1 }) }}">Next</a>
+                </li>
+
+            </ul>
+        </nav>
+
+        <div class="text-center text-muted small">
+            Showing {{ records|length }} of {{ total }} records — page {{ page }} of {{ pages }}
+        </div>
+    {% endif %}
 
     {# Shared modal for both View and Edit #}
     <div class="modal fade" id="iaRecordModal" tabindex="-1" aria-hidden="true">

@@ -18,20 +18,17 @@ class IndependentAgeRecordController extends AbstractController
     #[Route('/', name: 'app_independent_age_index', methods: ['GET'])]
     public function index(Request $request, IndependentAgeRecordRepository $repo): Response
     {
-        $page  = max(1, (int) $request->query->get('page', 1));
-        $limit = (int) $request->query->get('limit', 50);
+        $page = max(1, (int) $request->query->get('page', 1));
+        $limit = 20;
 
-        if ($limit < 1) {
-            $limit = 50;
-        }
+        $total = $repo->countAllRecords();
+        $pages = (int) max(1, ceil($total / $limit));
 
-        if ($limit > 200) {
-            $limit = 200;
+        if ($page > $pages) {
+            $page = $pages;
         }
 
         $records = $repo->findPage($page, $limit);
-        $total   = $repo->countAllRecords();
-        $pages   = (int) max(1, (int) ceil($total / $limit));
 
         return $this->render('independent_age/index.html.twig', [
             'records' => $records,
