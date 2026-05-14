@@ -33,6 +33,12 @@ class IndependentAgeActionController extends AbstractController
         $form = $this->createForm(IndependentAgeActionType::class, $action);
         $form->handleRequest($request);
 
+        if ($form->isSubmitted()) {
+            if ($action->getActionLocation() !== 'other') {
+                $action->setActionLocationOther(null);
+            }
+        }
+
         if ($form->isSubmitted() && $form->isValid()) {
             $em->persist($action);
             $em->flush();
@@ -62,6 +68,12 @@ class IndependentAgeActionController extends AbstractController
 
         $form = $this->createForm(IndependentAgeActionType::class, $action);
         $form->handleRequest($request);
+
+        if ($form->isSubmitted()) {
+            if ($action->getActionLocation() !== 'other') {
+                $action->setActionLocationOther(null);
+            }
+        }
 
         if ($form->isSubmitted() && $form->isValid()) {
             $em->flush();
