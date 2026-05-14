@@ -12,6 +12,15 @@ use Symfony\Component\Validator\Constraints as Assert;
 #[ORM\Table(name: 'independent_age_action')]
 class IndependentAgeAction
 {
+    public const ACTION_LOCATION_CHOICES = [
+        'Home visit' => 'home_visit',
+        'Telephone/Online' => 'telephone_online',
+        'In a community or outreach setting' => 'community_outreach',
+        'Hub' => 'hub',
+        'Other' => 'other',
+        'Not recorded' => 'not_recorded',
+    ];
+
     public function __construct()
     {
         $this->uuid = Uuid::v4()->toRfc4122();
@@ -34,11 +43,16 @@ class IndependentAgeAction
     #[Assert\NotNull]
     private ?\DateTimeImmutable $date = null;
 
+    #[ORM\Column(length: 60, nullable: true)]
+    private ?string $actionLocation = null;
+
+    #[ORM\Column(length: 255, nullable: true)]
+    private ?string $actionLocationOther = null;
+
     #[ORM\Column(type: Types::TEXT)]
     #[Assert\NotBlank]
     private ?string $action = null;
 
-    // keep as string because Doctrine maps DECIMAL to string to avoid float issues
     #[ORM\Column(type: Types::DECIMAL, precision: 10, scale: 2, nullable: true)]
     private ?string $outcome = null;
 
@@ -52,6 +66,12 @@ class IndependentAgeAction
 
     public function getDate(): ?\DateTimeImmutable { return $this->date; }
     public function setDate(\DateTimeImmutable $date): self { $this->date = $date; return $this; }
+
+    public function getActionLocation(): ?string { return $this->actionLocation; }
+    public function setActionLocation(?string $actionLocation): self { $this->actionLocation = $actionLocation; return $this; }
+
+    public function getActionLocationOther(): ?string { return $this->actionLocationOther; }
+    public function setActionLocationOther(?string $actionLocationOther): self { $this->actionLocationOther = $actionLocationOther; return $this; }
 
     public function getAction(): ?string { return $this->action; }
     public function setAction(string $action): self { $this->action = $action; return $this; }

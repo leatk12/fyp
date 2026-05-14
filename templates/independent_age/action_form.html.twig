@@ -30,9 +30,19 @@
                     <div class="col-md-3">
                         {{ form_row(form.date) }}
                     </div>
+
+                    <div class="col-md-5">
+                        {{ form_row(form.actionLocation) }}
+                    </div>
+
+                    <div class="col-md-4">
+                        {{ form_row(form.actionLocationOther) }}
+                    </div>
+
                     <div class="col-md-9">
                         {{ form_row(form.action) }}
                     </div>
+
                     <div class="col-md-3">
                         {{ form_row(form.outcome) }}
                     </div>
@@ -46,4 +56,22 @@
             </div>
         </div>
     </div>
+
+    <script>
+        document.addEventListener('DOMContentLoaded', function () {
+            const locationSelect = document.getElementById('independent_age_action_actionLocation');
+            const otherLabel = document.querySelector('[for="independent_age_action_actionLocationOther"]');
+            const otherWrap = otherLabel ? otherLabel.closest('.mb-3') : null;
+
+            function toggleOtherLocation() {
+                if (!locationSelect || !otherWrap) return;
+                otherWrap.style.display = locationSelect.value === 'other' ? '' : 'none';
+            }
+
+            if (locationSelect) {
+                locationSelect.addEventListener('change', toggleOtherLocation);
+                toggleOtherLocation();
+            }
+        });
+    </script>
 {% endblock %}
