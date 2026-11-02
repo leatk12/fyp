@@ -1,0 +1,64 @@
+{% set sections = {
+'Registration': [
+'date', 'fullName', 'age', 'gender'
+],
+'Address and contact details': [
+'streetAddress', 'town', 'postcode', 'phone', 'email'
+],
+'How you heard about us': [
+'heardAbout', 'heardAboutOther'
+],
+'Support and additional needs': [
+'supportNeeds', 'supportOther', 'additionalNeeds'
+],
+'Employment': [
+'lookingForWork', 'employment'
+],
+'Welfare benefits': [
+'benefits', 'benefitsOther'
+],
+'Immigration status': [
+'immigrationStatuses', 'statusDescribe'
+],
+'Language and caring responsibilities': [
+'englishFirstLanguage', 'firstLanguage',
+'caringResponsibilities'
+],
+'Housing': [
+'housing', 'otherLandlord', 'housingOther'
+],
+'Great Places consent': [
+'greatPlacesConsent', 'greatPlacesSignature'
+],
+'Contact permissions': [
+'permissions', 'doNotContact'
+],
+'Sharing consent': [
+'sharingConsent', 'sharingSignature'
+],
+'Image consent': [
+'imageConsent', 'imageSignature'
+],
+'E-Safety agreement': [
+'eSafetyAgreement', 'eSafetySignature'
+],
+'Staff administration': [
+'headerChecks'
+]
+} %}
+
+{{ form_errors(form) }}
+
+{% for heading, fields in sections %}
+<section class="card mb-3">
+    <div class="card-header">
+        <h2 class="h5 mb-0">{{ heading }}</h2>
+    </div>
+
+    <div class="card-body">
+        {% for field in fields %}
+        {{ form_row(attribute(form, field)) }}
+        {% endfor %}
+    </div>
+</section>
+{% endfor %}

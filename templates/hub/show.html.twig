@@ -1,0 +1,147 @@
+{% extends 'base.html.twig' %}
+
+{% form_theme details 'bootstrap_5_layout.html.twig' %}
+
+{% block title %}Hub — {{ record.fullName }}{% endblock %}
+
+{% block body %}
+<div class="d-flex flex-wrap justify-content-between
+                align-items-start gap-3 mb-3">
+    <div>
+        <h1 class="h2">{{ record.fullName }}</h1>
+        <div class="small text-muted">
+            UUID: {{ record.uuid }}
+        </div>
+    </div>
+
+    <div class="d-flex flex-wrap gap-2">
+        <a href="{{ path('app_hub_index') }}"
+           class="btn btn-outline-secondary">
+            Back to records
+        </a>
+
+        <a href="{{ path('app_hub_edit', {
+                uuid: record.uuid
+            }) }}"
+           class="btn btn-primary">
+            Edit record
+        </a>
+
+        <a href="{{ path('app_hub_action_new', {
+                recordUuid: record.uuid
+            }) }}"
+           class="btn btn-success">
+            Add action
+        </a>
+    </div>
+</div>
+
+{% include 'hub/_flashes.html.twig' %}
+
+<h2 class="h4 mt-4">Actions and achievements</h2>
+
+{% for action in record.actions %}
+<article class="card mb-3">
+    <div class="card-header d-flex flex-wrap
+                        justify-content-between align-items-center gap-2">
+        <strong>
+            {{ action.date
+            ? action.date|date('d/m/Y')
+            : '—' }}
+        </strong>
+
+        <div class="d-flex gap-2">
+            <a href="{{ path('app_hub_action_edit', {
+                        actionUuid: action.uuid
+                    }) }}"
+               class="btn btn-sm btn-outline-primary">
+                Edit action
+            </a>
+
+            <form method="post"
+                  action="{{ path('app_hub_action_delete', {
+                              actionUuid: action.uuid
+                          }) }}"
+                  onsubmit="return confirm('Delete this Hub action?');">
+
+                <input type="hidden"
+                       name="_token"
+                       value="{{ csrf_token(
+                                   'delete_hub_action_' ~ action.uuid
+                               ) }}">
+
+                <button type="submit"
+                        class="btn btn-sm btn-outline-danger">
+                    Delete action
+                </button>
+            </form>
+        </div>
+    </div>
+
+    <div class="card-body">
+        {% set locations = {
+        home_visit: 'Home visit',
+        telephone_online: 'Telephone/Online',
+        community_outreach: 'Community or outreach setting',
+        hub: 'Hub',
+        other: 'Other',
+        not_recorded: 'Not recorded'
+        } %}
+
+        <p>
+            <strong>Location:</strong>
+
+            {% if action.actionLocation %}
+            {{ locations[action.actionLocation]
+            ?? action.actionLocation }}
+            {% else %}
+            Not recorded
+            {% endif %}
+
+            {% if action.actionLocation == 'other'
+            and action.actionLocationOther %}
+            — {{ action.actionLocationOther }}
+            {% endif %}
+        </p>
+
+        <h3 class="h6">Actions taken</h3>
+        <div style="white-space: pre-wrap">{{ action.action }}</div>
+
+        <h3 class="h6 mt-3">Achievements</h3>
+        <div style="white-space: pre-wrap">{{ action.achievements ?: '—' }}</div>
+
+        <p class="mt-3 mb-0">
+            <strong>Numeric outcome:</strong>
+            {{ action.outcome ?? '—' }}
+        </p>
+    </div>
+</article>
+{% else %}
+<p class="text-muted">No actions recorded yet.</p>
+{% endfor %}
+
+<h2 class="h4 mt-4">Registration details</h2>
+
+{% include 'hub/_record_fields.html.twig' with {
+form: details
+} only %}
+
+<div class="border-top pt-3 mb-4">
+    <form method="post"
+          action="{{ path('app_hub_delete', {
+                  uuid: record.uuid
+              }) }}"
+          onsubmit="return confirm('Delete this Hub record and ALL its Hub actions? This cannot be undone.');">
+
+        <input type="hidden"
+               name="_token"
+               value="{{ csrf_token(
+                       'delete_hub_record_' ~ record.uuid
+                   ) }}">
+
+        <button type="submit" class="btn btn-outline-danger">
+            Delete record and its actions
+        </button>
+    </form>
+</div>
+{% endblock %}
