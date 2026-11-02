@@ -1,0 +1,324 @@
+{% extends 'base.html.twig' %}
+
+{% block title %}Hub Monitoring{% endblock %}
+
+{% block body %}
+    <div class="d-flex flex-wrap justify-content-between
+                align-items-center gap-2 mb-3">
+        <h1 class="h2 mb-0">Hub Monitoring</h1>
+
+        <a href="{{ path('app_hub_new') }}"
+           class="btn btn-primary">
+            New record
+        </a>
+    </div>
+
+    {% include 'hub/_flashes.html.twig' %}
+
+    <form method="get"
+          action="{{ path('app_hub_index') }}"
+          class="row g-2 mb-3">
+
+        <div class="col-sm-8">
+            <label for="hub-search" class="visually-hidden">
+                Search by full name
+            </label>
+
+            <input id="hub-search"
+                   type="search"
+                   name="q"
+                   value="{{ q }}"
+                   class="form-control"
+                   placeholder="Search by full name">
+        </div>
+
+        <div class="col-auto">
+            <button class="btn btn-outline-primary">
+                Search
+            </button>
+
+            <a href="{{ path('app_hub_index') }}"
+               class="btn btn-outline-secondary">
+                Clear
+            </a>
+        </div>
+    </form>
+
+    <p class="text-muted">
+        {{ total }} record{{ total == 1 ? '' : 's' }}.
+        Click a record to show its actions.
+    </p>
+
+    {% set locations = {
+        home_visit: 'Home visit',
+        telephone_online: 'Telephone/Online',
+        community_outreach: 'Community or outreach setting',
+        hub: 'Hub',
+        other: 'Other',
+        not_recorded: 'Not recorded'
+    } %}
+
+    <div class="table-responsive">
+        <table class="table table-hover align-middle">
+            <thead>
+            <tr>
+                <th>Date</th>
+                <th>Full name</th>
+                <th>Age</th>
+                <th>Town</th>
+                <th>Postcode</th>
+                <th>Options</th>
+            </tr>
+            </thead>
+
+            <tbody>
+            {% for record in records %}
+                {% set panelId = 'hub-actions-' ~ record.uuid %}
+                {% set toggleId = 'hub-toggle-' ~ record.uuid %}
+
+                <tr class="hub-record-row"
+                    data-toggle-button="{{ toggleId }}"
+                    style="cursor: pointer;">
+
+                    <td>
+                        {{ record.date
+                        ? record.date|date('d/m/Y')
+                        : '—' }}
+                    </td>
+
+                    <td>
+                        <button id="{{ toggleId }}"
+                                type="button"
+                                class="btn btn-link text-start p-0"
+                                data-bs-toggle="collapse"
+                                data-bs-target="#{{ panelId }}"
+                                aria-expanded="false"
+                                aria-controls="{{ panelId }}">
+
+                                <span class="fw-bold">
+                                    {{ record.fullName }}
+                                </span>
+
+                            <span class="badge bg-secondary ms-1">
+                                    {{ record.actions|length }}
+                                    action{{ record.actions|length == 1 ? '' : 's' }}
+                                </span>
+                        </button>
+                    </td>
+
+                    <td>{{ record.age ?? '—' }}</td>
+                    <td>{{ record.town ?: '—' }}</td>
+                    <td>{{ record.postcode ?: '—' }}</td>
+
+                    <td>
+                        <div class="d-flex flex-wrap gap-1">
+                            <a href="{{ path('app_hub_view', {
+                                uuid: record.uuid
+                            }) }}"
+                               class="btn btn-sm btn-outline-primary">
+                                View
+                            </a>
+
+                            <a href="{{ path('app_hub_edit', {
+                                uuid: record.uuid
+                            }) }}"
+                               class="btn btn-sm btn-outline-secondary">
+                                Edit
+                            </a>
+
+                            <a href="{{ path('app_hub_action_new', {
+                                recordUuid: record.uuid
+                            }) }}"
+                               class="btn btn-sm btn-outline-success">
+                                Add action
+                            </a>
+                        </div>
+                    </td>
+                </tr>
+
+                <tr>
+                    <td colspan="6" class="p-0 border-0">
+                        <div id="{{ panelId }}"
+                             class="collapse"
+                             role="region"
+                             aria-labelledby="{{ toggleId }}">
+
+                            <div class="p-3 bg-light border rounded mb-3">
+                                <div class="d-flex flex-wrap
+                                                justify-content-between
+                                                align-items-center gap-2 mb-3">
+
+                                    <h2 class="h5 mb-0">
+                                        Actions for {{ record.fullName }}
+                                    </h2>
+
+                                    <a href="{{ path('app_hub_action_new', {
+                                        recordUuid: record.uuid
+                                    }) }}"
+                                       class="btn btn-sm btn-success">
+                                        Add action
+                                    </a>
+                                </div>
+
+                                {% if record.actions|length > 0 %}
+                                    <div class="table-responsive">
+                                        <table class="table table-sm
+                                                          table-bordered bg-white mb-0">
+                                            <thead>
+                                            <tr>
+                                                <th>Date</th>
+                                                <th>Location</th>
+                                                <th>Action taken</th>
+                                                <th>Achievements</th>
+                                                <th>Numeric outcome</th>
+                                                <th>Options</th>
+                                            </tr>
+                                            </thead>
+
+                                            <tbody>
+                                            {% for action in record.actions %}
+                                                <tr>
+                                                    <td class="text-nowrap">
+                                                        {{ action.date
+                                                        ? action.date|date('d/m/Y')
+                                                        : '—' }}
+                                                    </td>
+
+                                                    <td>
+                                                        {% if action.actionLocation %}
+                                                            {{ locations[action.actionLocation]
+                                                            ?? action.actionLocation }}
+                                                        {% else %}
+                                                            Not recorded
+                                                        {% endif %}
+
+                                                        {% if action.actionLocation == 'other'
+                                                            and action.actionLocationOther %}
+                                                            <div class="small text-muted">
+                                                                {{ action.actionLocationOther }}
+                                                            </div>
+                                                        {% endif %}
+                                                    </td>
+
+                                                    <td style="white-space: pre-wrap;">{{ action.action }}</td>
+
+                                                    <td style="white-space: pre-wrap;">{{ action.achievements ?: '—' }}</td>
+
+                                                    <td>
+                                                        {{ action.outcome ?? '—' }}
+                                                    </td>
+
+                                                    <td>
+                                                        <div class="d-flex gap-1">
+                                                            <a href="{{ path('app_hub_action_edit', {
+                                                                actionUuid: action.uuid
+                                                            }) }}"
+                                                               class="btn btn-sm btn-outline-primary">
+                                                                Edit
+                                                            </a>
+
+                                                            <form method="post"
+                                                                  action="{{ path('app_hub_action_delete', {
+                                                                      actionUuid: action.uuid
+                                                                  }) }}"
+                                                                  onsubmit="return confirm('Delete this Hub action?');">
+
+                                                                <input type="hidden"
+                                                                       name="_token"
+                                                                       value="{{ csrf_token(
+                                                                           'delete_hub_action_' ~ action.uuid
+                                                                       ) }}">
+
+                                                                <button type="submit"
+                                                                        class="btn btn-sm btn-outline-danger">
+                                                                    Delete
+                                                                </button>
+                                                            </form>
+                                                        </div>
+                                                    </td>
+                                                </tr>
+                                            {% endfor %}
+                                            </tbody>
+                                        </table>
+                                    </div>
+                                {% else %}
+                                    <p class="text-muted mb-0">
+                                        No actions recorded for this person yet.
+                                    </p>
+                                {% endif %}
+                            </div>
+                        </div>
+                    </td>
+                </tr>
+            {% else %}
+                <tr>
+                    <td colspan="6" class="text-center text-muted">
+                        No Hub records found.
+                    </td>
+                </tr>
+            {% endfor %}
+            </tbody>
+        </table>
+    </div>
+
+    {% if pages > 1 %}
+        <nav aria-label="Hub record pages"
+             class="d-flex justify-content-between align-items-center mb-4">
+
+            <div>
+                {% if page > 1 %}
+                    <a href="{{ path('app_hub_index', {
+                        page: page - 1,
+                        q: q
+                    }) }}"
+                       class="btn btn-outline-secondary">
+                        Previous
+                    </a>
+                {% endif %}
+            </div>
+
+            <span>Page {{ page }} of {{ pages }}</span>
+
+            <div>
+                {% if page < pages %}
+                    <a href="{{ path('app_hub_index', {
+                        page: page + 1,
+                        q: q
+                    }) }}"
+                       class="btn btn-outline-secondary">
+                        Next
+                    </a>
+                {% endif %}
+            </div>
+        </nav>
+    {% endif %}
+{% endblock %}
+
+{% block javascripts %}
+    {{ parent() }}
+
+    <script>
+        document.addEventListener('click', function (event) {
+            const row = event.target.closest('.hub-record-row');
+
+            if (!row) {
+                return;
+            }
+
+            // Links, buttons and form controls retain their own behaviour.
+            if (event.target.closest(
+                'a, button, input, select, textarea, label, form'
+            )) {
+                return;
+            }
+
+            const toggle = document.getElementById(
+                row.dataset.toggleButton
+            );
+
+            if (toggle) {
+                toggle.click();
+            }
+        });
+    </script>
+{% endblock %}
