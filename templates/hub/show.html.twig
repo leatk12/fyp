@@ -126,22 +126,5 @@
 form: details
 } only %}
 
-<div class="border-top pt-3 mb-4">
-    <form method="post"
-          action="{{ path('app_hub_delete', {
-                  uuid: record.uuid
-              }) }}"
-          onsubmit="return confirm('Delete this Hub record and ALL its Hub actions? This cannot be undone.');">
 
-        <input type="hidden"
-               name="_token"
-               value="{{ csrf_token(
-                       'delete_hub_record_' ~ record.uuid
-                   ) }}">
-
-        <button type="submit" class="btn btn-outline-danger">
-            Delete record and its actions
-        </button>
-    </form>
-</div>
 {% endblock %}
