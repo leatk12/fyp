@@ -5,15 +5,38 @@
 {% block title %}{{ title }}{% endblock %}
 
 {% block body %}
-<div class="d-flex flex-wrap justify-content-between
-                align-items-center gap-2 mb-3">
-    <h1 class="h2 mb-0">{{ title }}</h1>
+    <div class="d-flex flex-wrap justify-content-between
+            align-items-center gap-2 mb-3">
 
-    <a href="{{ path('app_hub_index') }}"
-       class="btn btn-outline-secondary">
-        Back to records
-    </a>
-</div>
+        <h1 class="h2 mb-0">{{ title }}</h1>
+
+        <div class="d-flex flex-wrap align-items-center gap-2">
+            <a href="{{ path('app_hub_index') }}"
+               class="btn btn-outline-secondary">
+                Back to records
+            </a>
+
+            {% if record.id is not null %}
+                <form method="post"
+                      action="{{ path('app_hub_delete', {
+                          uuid: record.uuid
+                      }) }}"
+                      class="m-0"
+                      onsubmit="return confirm('Delete this Hub record and ALL its Hub actions? This cannot be undone.');">
+
+                    <input type="hidden"
+                           name="_token"
+                           value="{{ csrf_token(
+                               'delete_hub_record_' ~ record.uuid
+                           ) }}">
+
+                    <button type="submit" class="btn btn-outline-danger">
+                        Delete record
+                    </button>
+                </form>
+            {% endif %}
+        </div>
+    </div>
 
 {% include 'hub/_flashes.html.twig' %}
 
