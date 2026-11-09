@@ -79,6 +79,10 @@
     </div>
 
     <div class="card-body">
+        <p>
+            <strong>Appointment performed by:</strong>
+            {{ action.performedBy ?: ' Not recorded' }}
+        </p>
         {% set locations = {
         home_visit: 'Home visit',
         telephone_online: 'Telephone/Online',

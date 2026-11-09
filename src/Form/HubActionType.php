@@ -20,6 +20,15 @@ class HubActionType extends AbstractType
                 'input' => 'datetime_immutable',
                 'label' => 'Date',
             ])
+            ->add('performedBy', T\TextType::class, [
+                'label' => 'Appointment performed by',
+                'required' => false,
+                'help' => 'Name of the staff member or volunteer who carried out the appointment.',
+                'attr' => [
+                    'maxlength' => 255,
+                    'placeholder' => 'Enter their name',
+                ],
+            ])
             ->add('actionLocation', T\ChoiceType::class, [
                 'label' => 'Where was the action performed?',
                 'choices' => HubAction::ACTION_LOCATION_CHOICES,

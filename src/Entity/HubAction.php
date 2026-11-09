@@ -43,6 +43,9 @@ class HubAction
     #[ORM\Column(type: Types::DATE_IMMUTABLE)]
     #[Assert\NotNull]
     public ?\DateTimeImmutable $date = null;
+    #[ORM\Column(name: 'performed_by', length: 255, nullable: true)]
+    #[Assert\Length(max:255)]
+    public ?string $performedBy = null;
 
     #[ORM\Column(name: 'action_location', length: 60, nullable: true)]
     #[Assert\Length(max: 60)]
