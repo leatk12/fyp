@@ -185,6 +185,7 @@
                                             <thead>
                                             <tr>
                                                 <th>Date</th>
+                                                <th>Performed by</th>
                                                 <th>Location</th>
                                                 <th>Action taken</th>
                                                 <th>Achievements</th>
@@ -200,6 +201,10 @@
                                                         {{ action.date
                                                         ? action.date|date('d/m/Y')
                                                         : '—' }}
+                                                    </td>
+
+                                                    <td>
+                                                        {{ action.performedBy ?: 'Not recorded' }}
                                                     </td>
 
                                                     <td>
